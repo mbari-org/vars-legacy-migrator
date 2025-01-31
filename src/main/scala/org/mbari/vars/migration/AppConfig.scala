@@ -14,8 +14,13 @@ object AppConfig {
 
   val Config = ConfigFactory.load()
 
-  val Name: String = "vars-migration"
+  val Name: String = "vars-legacy-migrator"
 
   val Version: String = Try(getClass.getPackage.getImplementationVersion).getOrElse("0.0.0-SNAPSHOT")
+
+  object Annosaurus {
+      val Url: String = Config.getString("annosaurus.url")
+      val Secret: String = Config.getString("annosaurus.secret")
+  }
 
 }

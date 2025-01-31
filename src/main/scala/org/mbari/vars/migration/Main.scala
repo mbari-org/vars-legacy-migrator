@@ -9,18 +9,24 @@ package org.mbari.vars.migration
 
 import mainargs.arg
 import mainargs.ParserForMethods
+import org.mbari.scommons.etc.jdk.Loggers.given
+
+import java.lang.System.Logger.Level
 
 object Main:
 
-  def main(args: Array[String]): Unit = 
-    ParserForMethods(this).runOrExit(args.toSeq)
-    System.exit(0)
+    private val log = System.getLogger(Main.getClass.getName)
 
-  @mainargs.main(
-    name = "main-runner",
-    doc = "A main app"
-  )
-  def run(
-    @arg(positional = true, doc = "A message") msg: String
-  ): Unit = println(msg)
-  
+    def main(args: Array[String]): Unit =
+        ParserForMethods(this).runOrExit(args.toSeq)
+        System.exit(0)
+
+    @mainargs.main(
+        name = "main-runner",
+        doc = "A main app"
+    )
+    def run(
+        @arg(positional = true, doc = "A message") msg: String
+    ): Unit =
+        log.log(Level.INFO, "1. Running with message: " + msg)
+        log.atInfo.log("2. Running with message: " + msg)
