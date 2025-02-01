@@ -7,8 +7,7 @@
 
 package org.mbari.vars.migration
 
-import mainargs.arg
-import mainargs.ParserForMethods
+import mainargs.{arg, ParserForMethods}
 import org.mbari.scommons.etc.jdk.Loggers.given
 
 import java.lang.System.Logger.Level

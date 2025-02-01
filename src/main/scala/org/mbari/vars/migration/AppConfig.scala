@@ -8,19 +8,17 @@
 package org.mbari.vars.migration
 
 import com.typesafe.config.ConfigFactory
+
 import scala.util.Try
 
-object AppConfig {
+object AppConfig:
 
-  val Config = ConfigFactory.load()
+    val Config = ConfigFactory.load()
 
-  val Name: String = "vars-legacy-migrator"
+    val Name: String = "vars-legacy-migrator"
 
-  val Version: String = Try(getClass.getPackage.getImplementationVersion).getOrElse("0.0.0-SNAPSHOT")
+    val Version: String = Try(getClass.getPackage.getImplementationVersion).getOrElse("0.0.0-SNAPSHOT")
 
-  object Annosaurus {
-      val Url: String = Config.getString("annosaurus.url")
-      val Secret: String = Config.getString("annosaurus.secret")
-  }
-
-}
+    object Annosaurus:
+        val Url: String    = Config.getString("annosaurus.url")
+        val Secret: String = Config.getString("annosaurus.secret")

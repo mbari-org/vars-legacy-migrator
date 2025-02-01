@@ -17,6 +17,9 @@ ThisBuild / organizationName := "MBARI"
 ThisBuild / startYear        := Some(2025)
 ThisBuild / versionScheme    := Some("semver-spec")
 
+ThisBuild / semanticdbEnabled := true
+ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
+
 lazy val root = project
     .in(file("."))
     .enablePlugins(
@@ -58,6 +61,7 @@ lazy val root = project
             scommons,
             slf4jSystem % Runtime,
             typesafeConfig,
+            vampireSquidSdk,
             varsLegacy
         ),
         scalacOptions ++= Seq(
@@ -70,7 +74,8 @@ lazy val root = project
             "-language:implicitConversions",
             "-language:postfixOps",
             "-unchecked",
-            "-Vprofile"
+            "-Vprofile",
+            "-Wunused:imports" // Warn if an import selector is not referenced.
         )
     )
 
