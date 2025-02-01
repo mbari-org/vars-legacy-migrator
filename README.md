@@ -1,8 +1,12 @@
-# vars-migration
+# vars-legacy-migrator
 
-![Build](https://github.com/mbari-org/vars-migration/actions/workflows/test.yml/badge.svg)
+![MBARI logo](src/docs/_assets/images/logo-mbari-3b.png)
 
-![MBARI logo](src/docs/images/logo-mbari-3b.png)
+Project for migrating first generation [VARS databases](https://github.com/hohonuuli/vars) to the [current infrastructure](https://github.com/mbari-org/m3-quickstart)
+
+![Build](https://github.com/mbari-org/vars-legacy-migrator/actions/workflows/test.yml/badge.svg)
+
+## Documentation
 
 MBARI [sbt](https://www.scala-sbt.org) project compiled with [Scala 3](https://www.scala-lang.org)
 
