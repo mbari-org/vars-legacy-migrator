@@ -2,7 +2,7 @@
 
 # vars-legacy-migrator
 
-![Build](https://github.com/mbari-org/vars-legacy-migrator/actions/workflows/test.yml/badge.svg) | ![Documentation](https://github.com/mbari-org/vars-legacy-migrator/actions/workflows/docs.yml/badge.svg)
+![Unit Tests](https://github.com/mbari-org/vars-legacy-migrator/actions/workflows/test.yml/badge.svg) ![Site Generator](https://github.com/mbari-org/vars-legacy-migrator/actions/workflows/docs.yml/badge.svg)
 
 Project for migrating first generation [VARS databases](https://github.com/hohonuuli/vars) to the [current infrastructure](https://github.com/mbari-org/m3-quickstart)
 
