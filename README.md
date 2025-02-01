@@ -1,10 +1,10 @@
-# vars-legacy-migrator
-
 ![MBARI logo](src/docs/_assets/images/logo-mbari-3b.png)
 
-Project for migrating first generation [VARS databases](https://github.com/hohonuuli/vars) to the [current infrastructure](https://github.com/mbari-org/m3-quickstart)
+# vars-legacy-migrator
 
-![Build](https://github.com/mbari-org/vars-legacy-migrator/actions/workflows/test.yml/badge.svg)
+![Build](https://github.com/mbari-org/vars-legacy-migrator/actions/workflows/test.yml/badge.svg) | ![Documentation](https://github.com/mbari-org/vars-legacy-migrator/actions/workflows/docs.yml/badge.svg)
+
+Project for migrating first generation [VARS databases](https://github.com/hohonuuli/vars) to the [current infrastructure](https://github.com/mbari-org/m3-quickstart)
 
 ## Documentation
 
@@ -21,17 +21,9 @@ This is a normal sbt project. You can compile code with `sbt compile`, run it wi
 3. `scaladoc` - Build documentation, including API docs to `target/docs/site`
 4. `compile` then `scalafmtAll` - Will convert all syntax to new-style, indent based Scala 3.
 
-## Libraries
-
-- [circe](https://circe.github.io/circe/) for JSON handling
-- [Methanol](https://github.com/mizosoft/methanol) with [Java's HttpClient](https://docs.oracle.com/en/java/javase/17/docs/api/java.net.http/java/net/http/HttpClient.html) for HTTP client
-- [munit](https://github.com/scalameta/munit) for testing
-- [picocli](https://picocli.info/) for command line arg parsing
-- [slf4j](http://www.slf4j.org/) with [logback](http://logback.qos.ch/) for logging. Use java.lang.System.Logger
-- [ZIO](https://zio.dev/) for effects
 
 ## Notes
 
 Documentation can be added as markdown files in `docs` and will be included automatically when you run `scaladoc`.
 
-When updating SBT version, make sure to update the devcontainer image in [devcontainer.json](.devcontainer/devcontainer.json). It's versions are `eclipse-temurin-<java.version>_<sbt.version>_<scala.version>`
+
