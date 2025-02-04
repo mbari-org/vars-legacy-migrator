@@ -16,6 +16,8 @@ import vars.ToolBelt
 import java.time.Duration
 import scala.jdk.CollectionConverters.*
 import scala.util.control.NonFatal
+import java.nio.file.Path
+import org.mbari.vars.migration.services.MigrateService
 
 object MigrateOne:
 
@@ -25,7 +27,10 @@ object MigrateOne:
     private val annosaurusClient  =
         new AnnosaurusHttpClient(AppConfig.Annosaurus.Url, Duration.ofSeconds(20), AppConfig.Annosaurus.Secret)
 
-    def run(videoArchiveName: String): Unit =
+
+    def run(videoArchiveName: String, cvsLookup: Path): Unit =
+        println("Running MigrateOne")
+        val migrateService = new MigrateService(toolBelt, cvsLookup)
         val dao = toolBelt.getAnnotationDAOFactory.newVideoArchiveDAO()
         val opt = varsLegacyService.findVideoArchiveSetByVideoArchiveName(videoArchiveName)
         opt match
@@ -36,7 +41,7 @@ object MigrateOne:
                 do
                     try
                         // do something
-                        println(videoArchive)
+                        migrateService.migrate(videoArchive, missionContact)
                     catch
                         case NonFatal(e) =>
                             log.atError.withCause(e).log(s"Failed to migrate $videoArchiveName")
