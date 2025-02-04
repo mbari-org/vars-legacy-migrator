@@ -22,7 +22,9 @@ class MigrateService(toolBelt: ToolBelt, csvLookup: Path):
         // Do the migration here
         mediaFactory.toMedia(videoArchive) match
             case Some(media) =>
-                println(media)
+                println(s"Media: ${media.getUri}, ${media.getVideoSequenceName}, ${media.getVideoName}")
+                println(s"MissionContact: $missionContact")
+                println(s"VideoArchive: ${videoArchive.getName} with ${videoArchive.getVideoFrames.size()} video frames")
             case None =>
                 println(s"Not able to transform ${videoArchive.getName} to a media object")
         println("Migration complete")

@@ -7,13 +7,18 @@
 
 package org.mbari.vars.migration
 
-import mainargs.{ParserForMethods, arg}
+import mainargs.{arg, main, ParserForMethods, TokensReader}
 import org.mbari.scommons.etc.jdk.Loggers.given
+import org.mbari.vars.migration.etc.mainargs.PathReader
 import org.mbari.vars.migration.subcommands.MigrateOne
 
 import java.lang.System.Logger.Level
+import java.nio.file.Path
 
 object Main:
+
+    // Needed for mainargs to parse Path arguments
+    given TokensReader.Simple[Path] = PathReader
 
     private val log = System.getLogger(Main.getClass.getName)
 
@@ -26,9 +31,11 @@ object Main:
         name = "migrate-one",
         doc = "Migrate a single video archive"
     )
-    def migrateOne(@arg(positional = true, doc = "The videoArchiveName to migrate") videoArchiveName: String): Unit =
+    def migrateOne(
+              @arg(positional = true, doc = "The videoArchiveName to migrate") videoArchiveName: String,
+              @arg(positional = true, doc = "Path to CSV lookup file") csvLookup: Path): Unit =
         log.atInfo.log("1. Running MigrateOne with videoArchiveName: " + videoArchiveName)
-        MigrateOne.run(videoArchiveName)
+        MigrateOne.run(videoArchiveName, csvLookup)
 
     @mainargs.main(
         name = "main-runner",
