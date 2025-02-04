@@ -7,4 +7,6 @@
 
 package org.mbari.vars.migration.subcommands
 
+// Need to be able to provide a default ission contact
+
 object MigrateAll

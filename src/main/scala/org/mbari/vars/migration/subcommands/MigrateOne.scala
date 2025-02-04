@@ -40,8 +40,12 @@ object MigrateOne:
                 for videoArchive <- videoArchiveSet.getVideoArchives.asScala
                 do
                     try
+                        val frames = videoArchive.getVideoFrames().asScala
+                        if frames.isEmpty then
+                            log.atWarn.log(s"No video frames found for $videoArchiveName")
+                        else
                         // do something
-                        migrateService.migrate(videoArchive, missionContact)
+                            migrateService.migrate(videoArchive, missionContact)
                     catch
                         case NonFatal(e) =>
                             log.atError.withCause(e).log(s"Failed to migrate $videoArchiveName")
