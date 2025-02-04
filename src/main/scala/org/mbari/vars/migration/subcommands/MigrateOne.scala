@@ -26,7 +26,6 @@ object MigrateOne:
         new AnnosaurusHttpClient(AppConfig.Annosaurus.Url, Duration.ofSeconds(20), AppConfig.Annosaurus.Secret)
 
     def run(videoArchiveName: String): Unit =
-        println("Running MigrateOne")
         val dao = toolBelt.getAnnotationDAOFactory.newVideoArchiveDAO()
         val opt = varsLegacyService.findVideoArchiveSetByVideoArchiveName(videoArchiveName)
         opt match

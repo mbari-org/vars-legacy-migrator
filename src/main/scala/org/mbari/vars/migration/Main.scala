@@ -7,8 +7,9 @@
 
 package org.mbari.vars.migration
 
-import mainargs.{arg, ParserForMethods}
+import mainargs.{ParserForMethods, arg}
 import org.mbari.scommons.etc.jdk.Loggers.given
+import org.mbari.vars.migration.subcommands.MigrateOne
 
 import java.lang.System.Logger.Level
 
@@ -19,6 +20,15 @@ object Main:
     def main(args: Array[String]): Unit =
         ParserForMethods(this).runOrExit(args.toSeq)
         System.exit(0)
+
+
+    @mainargs.main(
+        name = "migrate-one",
+        doc = "Migrate a single video archive"
+    )
+    def migrateOne(@arg(positional = true, doc = "The videoArchiveName to migrate") videoArchiveName: String): Unit =
+        log.atInfo.log("1. Running MigrateOne with videoArchiveName: " + videoArchiveName)
+        MigrateOne.run(videoArchiveName)
 
     @mainargs.main(
         name = "main-runner",

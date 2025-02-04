@@ -60,6 +60,7 @@ lazy val root = project
             mainargs,
             scommons,
             slf4jSystem % Runtime,
+            sqlserver % Runtime,
             typesafeConfig,
             vampireSquidSdk,
             varsLegacy
