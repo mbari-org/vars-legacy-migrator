@@ -26,12 +26,15 @@ object MigrateAll:
 
     private val log = System.getLogger(getClass.getName)
 
-    def migrate()(using annotationService: AnnotationService,
+    def run()(using annotationService: AnnotationService,
                                  mediaService: MediaService,
                                  mediaFactory: MediaFactory,
                                  toolBelt: ToolBelt): Unit =
         val varsLegacyService = VarsLegacyService()
         val videoArchiveNames = varsLegacyService.findAllVideoArchiveNames()
+        for videoArchiveName <- videoArchiveNames do
+            MigrateOne.run(videoArchiveName)
+
 
 
 

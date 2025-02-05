@@ -46,9 +46,9 @@ class MigrateService(using annotationService: AnnotationService,
                     case Some(existingMedia) =>
                         log.atInfo.log(s"Media with URI ${media.getUri} already exists. Skipping migration")
                     case None => // Do nothing
-                        vampireSquidService.create(media) match
-                            case None => // Do nothing
-                            case Some(newMedia) =>
+//                        vampireSquidService.create(media) match
+//                            case None => // Do nothing
+//                            case Some(newMedia) =>
                                 // TODO - Migrate annotations
 
 

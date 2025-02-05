@@ -11,7 +11,7 @@ object Dependencies {
 
     lazy val logback = "ch.qos.logback" % "logback-classic" % "1.5.16"
     lazy val mainargs = "com.lihaoyi" %% "mainargs" % "0.7.6"
-    lazy val methanol = "com.github.mizosoft.methanol" % "methanol" % "1.8.0"
+    lazy val methanol = "com.github.mizosoft.methanol" % "methanol" % "1.8.1"
     lazy val munit = "org.scalameta" %% "munit" % "1.1.0"
     lazy val scommons = "org.mbari.commons" %% "scommons" % "0.0.7"
     lazy val slf4jSystem = "org.slf4j" % "slf4j-jdk-platform-logging" % "2.0.16"
