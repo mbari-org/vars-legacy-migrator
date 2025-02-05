@@ -1,7 +1,7 @@
 #!/usr/bin/env -S scala shebang
 
 //> using dep "org.mbari.vars:vampire-squid-java-sdk:0.0.1"
-//> using dep
+
 
 import org.mbari.vars.vampiresquid.sdk.VampireSquidFactory
 import org.mbari.vars.vampiresquid.sdk.r1.VampireSquidKiotaClient
