@@ -8,7 +8,12 @@
 package org.mbari.vars.migration
 
 import com.typesafe.config.ConfigFactory
+import org.mbari.vars.annosaurus.sdk.r1.{AnnosaurusHttpClient, AnnotationService}
+import org.mbari.vars.vampiresquid.sdk.r1.{MediaService, VampireSquidKiotaClient}
+import vars.ToolBelt
 
+import java.net.URI
+import java.time.Duration
 import scala.util.Try
 
 object AppConfig:
@@ -22,7 +27,12 @@ object AppConfig:
     object Annosaurus:
         val Url: String    = Config.getString("annosaurus.url")
         val Secret: String = Config.getString("annosaurus.secret")
+        def defaultService: AnnotationService = AnnosaurusHttpClient(Url, Duration.ofSeconds(20), Secret)
 
     object VampireSquid:
         val Url: String    = Config.getString("vampiresquid.url")
         val Secret: String = Config.getString("vampiresquid.secret")
+        def defaultService: MediaService = VampireSquidKiotaClient(URI.create(Url), Secret)
+
+    object VarsLegacy:
+        def defaultToolBelt: ToolBelt = ToolBelt.defaultToolBelt()
