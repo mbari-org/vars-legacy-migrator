@@ -9,8 +9,9 @@ package org.mbari.vars.migration.services
 
 import vars.ToolBelt
 import vars.annotation.VideoArchiveSet
+import scala.jdk.CollectionConverters.*
 
-class VarsLegacyService(toolBelt: ToolBelt):
+class VarsLegacyService(using toolBelt: ToolBelt):
 
     def findVideoArchiveSetByVideoArchiveName(videoArchiveName: String): Option[VideoArchiveSet] =
         val dao = toolBelt.getAnnotationDAOFactory.newVideoArchiveDAO()
@@ -20,3 +21,10 @@ class VarsLegacyService(toolBelt: ToolBelt):
         dao.endTransaction()
         dao.close()
         opt
+
+    def findAllVideoArchiveNames(): Seq[String] =
+        toolBelt.getAnnotationPersistenceService
+            .findAllVideoArchiveNames()
+            .asScala
+            .toSeq
+            .sorted

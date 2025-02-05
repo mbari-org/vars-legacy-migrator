@@ -22,3 +22,7 @@ object AppConfig:
     object Annosaurus:
         val Url: String    = Config.getString("annosaurus.url")
         val Secret: String = Config.getString("annosaurus.secret")
+
+    object VampireSquid:
+        val Url: String    = Config.getString("vampiresquid.url")
+        val Secret: String = Config.getString("vampiresquid.secret")

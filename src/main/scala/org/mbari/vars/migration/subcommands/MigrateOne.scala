@@ -8,8 +8,9 @@
 package org.mbari.vars.migration.subcommands
 
 import org.mbari.scommons.etc.jdk.Loggers.given
-import org.mbari.vars.annosaurus.sdk.r1.AnnosaurusHttpClient
+import org.mbari.vars.annosaurus.sdk.r1.{AnnosaurusHttpClient, AnnotationService}
 import org.mbari.vars.migration.AppConfig
+import org.mbari.vars.migration.model.MediaFactory
 import org.mbari.vars.migration.services.VarsLegacyService
 import vars.ToolBelt
 
@@ -18,20 +19,21 @@ import scala.jdk.CollectionConverters.*
 import scala.util.control.NonFatal
 import java.nio.file.Path
 import org.mbari.vars.migration.services.MigrateService
+import org.mbari.vars.vampiresquid.sdk.r1.MediaService
 
 object MigrateOne:
 
-    private val log               = System.getLogger(getClass.getName)
-    private val toolBelt          = ToolBelt.defaultToolBelt()
-    private val varsLegacyService = VarsLegacyService(toolBelt)
-    private val annosaurusClient  =
-        new AnnosaurusHttpClient(AppConfig.Annosaurus.Url, Duration.ofSeconds(20), AppConfig.Annosaurus.Secret)
+    private val log = System.getLogger(getClass.getName)
 
 
-    def run(videoArchiveName: String, cvsLookup: Path): Unit =
+
+    def run(videoArchiveName: String)(using annotationService: AnnotationService,
+                                                       mediaService: MediaService,
+                                                       mediaFactory: MediaFactory,
+                                                       toolBelt: ToolBelt): Unit =
         println("Running MigrateOne")
-        val migrateService = new MigrateService(toolBelt, cvsLookup)
-        val dao = toolBelt.getAnnotationDAOFactory.newVideoArchiveDAO()
+        val migrateService = MigrateService()
+        val varsLegacyService = VarsLegacyService()
         val opt = varsLegacyService.findVideoArchiveSetByVideoArchiveName(videoArchiveName)
         opt match
             case None                  => log.atWarn.log(s"No VideoArchiveSet found for $videoArchiveName")
