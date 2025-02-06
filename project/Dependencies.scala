@@ -17,6 +17,6 @@ object Dependencies {
     lazy val slf4jSystem = "org.slf4j" % "slf4j-jdk-platform-logging" % "2.0.16"
     lazy val sqlserver = "com.microsoft.sqlserver" % "mssql-jdbc" % "12.8.1.jre11"
     lazy val typesafeConfig = "com.typesafe" % "config" % "1.4.3"
-    lazy val vampireSquidSdk = "org.mbari.vars" % "vampire-squid-java-sdk" % "0.0.1"
+    lazy val vampireSquidSdk = "org.mbari.vars" % "vampire-squid-java-sdk" % "0.0.3"
     lazy val varsLegacy = "org.mbari.vars" % "vars-legacy" % "6.0.0"
 }

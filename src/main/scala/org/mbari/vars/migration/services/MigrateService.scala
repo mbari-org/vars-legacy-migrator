@@ -7,7 +7,7 @@
 
 package org.mbari.vars.migration.services
 
-import org.mbari.vars.annosaurus.sdk.r1.AnnotationService
+import org.mbari.vars.annosaurus.sdk.r1.{AnnosaurusHttpClient, AnnotationService}
 import org.mbari.vars.migration.AppConfig
 import org.mbari.vars.migration.model.{AnnotationFactory, MediaFactory}
 import org.mbari.vars.vampiresquid.sdk.r1.{MediaService, VampireSquidKiotaClient}
@@ -15,8 +15,8 @@ import vars.ToolBelt
 import vars.annotation.VideoArchive
 import org.mbari.scommons.etc.jdk.Loggers.given
 import org.mbari.vars.vampiresquid.sdk.r1.models.Media
-import scala.jdk.CollectionConverters.*
 
+import scala.jdk.CollectionConverters.*
 import java.net.URI
 import java.nio.file.Path
 import scala.util.Try
@@ -32,37 +32,64 @@ class MigrateService(using annotationService: AnnotationService,
 
 
     def migrate(videoArchive: VideoArchive, missionContact: String): Unit =
-        println(s"Migrating ${videoArchive.getName} with missionContact $missionContact")
-        // Do the migration here
-        mediaFactory.toMedia(videoArchive) match
-            case Some(media) =>
-                println(s"Media: ${media.getUri}, ${media.getVideoSequenceName}, ${media.getVideoName}")
-                println(s"MissionContact: $missionContact")
-                println(s"VideoArchive: ${videoArchive.getName} with ${videoArchive.getVideoFrames.size()} video frames")
-
-                // Check if URI already exists
-                val mediaOpt = vampireSquidService.findByUri(media.getUri)
-                mediaOpt match
-                    case Some(existingMedia) =>
-                        log.atInfo.log(s"Media with URI ${media.getUri} already exists. Skipping migration")
-                    case None => // Do nothing
-//                        vampireSquidService.create(media) match
-//                            case None => // Do nothing
-//                            case Some(newMedia) =>
-                                // TODO - Migrate annotations
+        log.atInfo.log(s"---- Starting migration of ${videoArchive.getName} with missionContact $missionContact")
+        if canMigrate(videoArchive) then
+            findOrCreateMedia(videoArchive) match
+                case Some(media) =>
+                    migrateAnnotations(videoArchive, media, missionContact) // TODO - Implement this
+                case None =>
+                    log.atWarn.log(s"Not able to transform ${videoArchive.getName} to a media object")
 
 
+    def canMigrate(videoArchive: VideoArchive): Boolean =
+        val n = videoArchive.getVideoFrames.size()
+        if n == 0 then
+            log.atWarn.log(s"SKIPPING. No video frames found for ${videoArchive.getName}")
+            false
+        else
+            mediaFactory.toMedia(videoArchive) match
+                case Some(media) =>
+                    // Check if URI already exists
+                    val mediaOpt = vampireSquidService.findByUri(media.getUri)
+                    mediaOpt match
+                        case Some(existingMedia) =>
+                            val gson = AnnosaurusHttpClient.newGson()
+                            log.atWarn.log(gson.toJson(existingMedia))
+                            log.atDebug.log(s"Media with URI ${existingMedia.getUri} already exists. Checking for annotations ... ")
+                            // Check if there are any annotations for this media. If so, skip migration
+                            val count = annotationService.countAnnotations(existingMedia.getVideoReferenceUuid).join()
+                            if count.getCount > 0 then
+                                log.atWarn.log(s"SKIPPING. Media with URI ${existingMedia.getUri} already has annotations.")
+                                false
+                            else
+                                log.atDebug.log("No annotations found for this media. Ready to migrate.")
+                                true
+                        case None => true
+                case None =>
+                    log.atWarn.log(s"SKIPPING. Not able to transform ${videoArchive.getName} to a media object")
+                    false
 
+    private def findOrCreateMedia(videoArchive: VideoArchive): Option[Media] =
+        val newMedia =  mediaFactory.toMedia(videoArchive).get // we're always calling canMigrate first. So this should always be Some
+        val existingMediaOpt = vampireSquidService.findByUri(newMedia.getUri)
+        existingMediaOpt match
+            case Some(existingMedia) => Some(existingMedia)
             case None =>
-                println(s"Not able to transform ${videoArchive.getName} to a media object")
-        println("Migration complete")
-        println("")
+                vampireSquidService.create(newMedia)
 
     def migrateAnnotations(videoArchive: VideoArchive, media: Media, group: String): Unit =
         // Convert observations to annotations
         // Create annotations
         val videoFrames = videoArchive.getVideoFrames.asScala
         val annotations = videoFrames.flatMap(vf => AnnotationFactory.toAnnotations(media, vf, group))
+        val gson = AnnosaurusHttpClient.newGson()
+        log.atInfo.log(s"Creating ${annotations.size} annotations for ${videoArchive.getName}")
 
         // TODO - Create annotations
+        annotations.grouped(50)
+            .foreach(annos =>
+                val json = gson.toJson(annos.asJava)
+                log.atInfo.log(s"SENDING:\n$json"))
+//        annotations.grouped(50)
+//            .foreach(annos => annotationService.createAnnotations(annos.asJava).join())
 

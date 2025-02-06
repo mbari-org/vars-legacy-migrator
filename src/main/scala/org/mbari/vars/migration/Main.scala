@@ -49,7 +49,7 @@ object Main:
     def migrateOne(
               @arg(positional = true, doc = "The videoArchiveName to migrate") videoArchiveName: String,
               @arg(positional = true, doc = "Path to CSV lookup file") csvLookup: Path): Unit =
-        log.atInfo.log("1. Running MigrateOne with videoArchiveName: " + videoArchiveName)
+        log.atInfo.log(s"Running MigrateOne using CSV lookup file: $csvLookup with videoArchiveName: $videoArchiveName")
         given MediaFactory = MediaFactory(csvLookup)
         MigrateOne.run(videoArchiveName)
 
@@ -58,7 +58,7 @@ object Main:
         doc = "Migrate a single video archive"
     )
     def migrateAll(@arg(positional = true, doc = "Path to CSV lookup file") csvLookup: Path): Unit =
-
+        log.atInfo.log(s"Running MigrateAll using CSV lookup file: $csvLookup")
         given MediaFactory = MediaFactory(csvLookup)
         MigrateAll.run()
 
