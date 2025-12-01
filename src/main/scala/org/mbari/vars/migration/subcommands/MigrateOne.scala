@@ -31,7 +31,6 @@ object MigrateOne:
                                                        mediaService: MediaService,
                                                        mediaFactory: MediaFactory,
                                                        toolBelt: ToolBelt): Unit =
-        println("Running MigrateOne")
         val migrateService = MigrateService()
         val varsLegacyService = VarsLegacyService()
         val opt = varsLegacyService.findVideoArchiveSetByVideoArchiveName(videoArchiveName)

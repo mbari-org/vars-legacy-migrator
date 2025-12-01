@@ -17,7 +17,9 @@ class VarsLegacyService(using toolBelt: ToolBelt):
         val dao = toolBelt.getAnnotationDAOFactory.newVideoArchiveDAO()
         dao.startTransaction()
         val opt = Option(dao.findByName(videoArchiveName)).map(_.getVideoArchiveSet)
-        opt.map(_.getVideoFrames) // load the video frames in transaction
+        val videoFrames = opt.map(_.getVideoFrames.asScala).getOrElse(Nil) // load the video frames in transaction
+        val observations = videoFrames.flatMap(_.getObservations.asScala)
+        val associations = observations.flatMap(_.getAssociations.asScala)
         dao.endTransaction()
         dao.close()
         opt
