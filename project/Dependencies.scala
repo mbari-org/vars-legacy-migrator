@@ -7,7 +7,7 @@ object Dependencies {
     lazy val circeCore       = "io.circe"                    %% "circe-core"                 % circeVersion
     lazy val circeGeneric    = "io.circe"                    %% "circe-generic"              % circeVersion
     lazy val circeParser     = "io.circe"                    %% "circe-parser"               % circeVersion
-    lazy val logback         = "ch.qos.logback"               % "logback-classic"            % "1.5.16"
+    lazy val logback         = "ch.qos.logback"               % "logback-classic"            % "1.5.22"
     lazy val mainargs        = "com.lihaoyi"                 %% "mainargs"                   % "0.7.7"
     lazy val methanol        = "com.github.mizosoft.methanol" % "methanol"                   % "1.8.4"
     lazy val munit           = "org.scalameta"               %% "munit"                      % "1.2.1"

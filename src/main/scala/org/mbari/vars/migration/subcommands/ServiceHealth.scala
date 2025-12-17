@@ -7,9 +7,9 @@
 
 package org.mbari.vars.migration.subcommands
 
+import org.mbari.scommons.etc.jdk.Loggers.given
 import org.mbari.vars.annosaurus.sdk.r1.AnnotationService
 import org.mbari.vars.vampiresquid.sdk.r1.MediaService
-import org.mbari.scommons.etc.jdk.Loggers.given
 
 import scala.util.control.NonFatal
 
@@ -26,15 +26,9 @@ object ServiceHealth:
             case NonFatal(e) =>
                 log.atError.withCause(e).log("Failed to connect to Annosaurus")
 
-
         try
             mediaService.findAllCameraIds().join()
             log.atInfo.log("Connected to VampireSquid")
         catch
             case NonFatal(e) =>
                 log.atError.withCause(e).log("Failed to connect to VampireSquid")
-
-
-
-
-

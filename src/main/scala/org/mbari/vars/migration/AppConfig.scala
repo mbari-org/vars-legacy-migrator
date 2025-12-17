@@ -25,13 +25,13 @@ object AppConfig:
     val Version: String = Try(getClass.getPackage.getImplementationVersion).getOrElse("0.0.0-SNAPSHOT")
 
     object Annosaurus:
-        val Url: String    = Config.getString("annosaurus.url")
-        val Secret: String = Config.getString("annosaurus.secret")
+        val Url: String                       = Config.getString("annosaurus.url")
+        val Secret: String                    = Config.getString("annosaurus.secret")
         def defaultService: AnnotationService = AnnosaurusHttpClient(Url, Duration.ofSeconds(20), Secret)
 
     object VampireSquid:
-        val Url: String    = Config.getString("vampiresquid.url")
-        val Secret: String = Config.getString("vampiresquid.secret")
+        val Url: String                  = Config.getString("vampiresquid.url")
+        val Secret: String               = Config.getString("vampiresquid.secret")
         def defaultService: MediaService = VampireSquidKiotaClient(URI.create(Url), Secret)
 
     object VarsLegacy:

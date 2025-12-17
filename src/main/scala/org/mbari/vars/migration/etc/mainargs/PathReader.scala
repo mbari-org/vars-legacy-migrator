@@ -23,4 +23,3 @@ object PathReader extends TokensReader.Simple[java.nio.file.Path]:
             .normalize()
             .toAbsolutePath()
     )
-

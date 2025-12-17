@@ -7,7 +7,7 @@
 
 package org.mbari.vars.migration
 
-import mainargs.{ParserForMethods, TokensReader, arg, main}
+import mainargs.{arg, ParserForMethods, TokensReader}
 import org.mbari.scommons.etc.jdk.Loggers.given
 import org.mbari.vars.annosaurus.sdk.r1.AnnotationService
 import org.mbari.vars.migration.etc.mainargs.PathReader
@@ -23,9 +23,9 @@ object Main:
 
     // Needed for mainargs to parse Path arguments
     given TokensReader.Simple[Path] = PathReader
-    given AnnotationService = AppConfig.Annosaurus.defaultService
-    given MediaService = AppConfig.VampireSquid.defaultService
-    given ToolBelt = AppConfig.VarsLegacy.defaultToolBelt
+    given AnnotationService         = AppConfig.Annosaurus.defaultService
+    given MediaService              = AppConfig.VampireSquid.defaultService
+    given ToolBelt                  = AppConfig.VarsLegacy.defaultToolBelt
 
     private val log = System.getLogger(Main.getClass.getName)
 
@@ -41,14 +41,14 @@ object Main:
         log.atInfo.log("Checking services")
         ServiceHealth.run()
 
-
     @mainargs.main(
         name = "migrate-one",
         doc = "Migrate a single video archive"
     )
     def migrateOne(
-              @arg(positional = true, doc = "The videoArchiveName to migrate") videoArchiveName: String,
-              @arg(positional = true, doc = "Path to CSV lookup file") csvLookup: Path): Unit =
+        @arg(positional = true, doc = "The videoArchiveName to migrate") videoArchiveName: String,
+        @arg(positional = true, doc = "Path to CSV lookup file") csvLookup: Path
+    ): Unit =
         log.atInfo.log(s"Running MigrateOne using CSV lookup file: $csvLookup with videoArchiveName: $videoArchiveName")
         given MediaFactory = MediaFactory(csvLookup)
         MigrateOne.run(videoArchiveName)
