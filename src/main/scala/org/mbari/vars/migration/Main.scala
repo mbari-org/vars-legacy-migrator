@@ -12,7 +12,7 @@ import org.mbari.scommons.etc.jdk.Loggers.given
 import org.mbari.vars.annosaurus.sdk.r1.AnnotationService
 import org.mbari.vars.migration.etc.mainargs.PathReader
 import org.mbari.vars.migration.model.MediaFactory
-import org.mbari.vars.migration.subcommands.{MigrateAll, MigrateOne, ServiceHealth}
+import org.mbari.vars.migration.subcommands.{Login, MigrateAll, MigrateOne, ServiceHealth}
 import org.mbari.vars.vampiresquid.sdk.r1.MediaService
 import vars.ToolBelt
 
@@ -32,6 +32,16 @@ object Main:
     def main(args: Array[String]): Unit =
         ParserForMethods(this).runOrExit(args.toSeq)
         System.exit(0)
+
+    @mainargs.main(
+        name = "login",
+        doc = "Login to raziel, the VARS API gateway"
+    )
+    def login(
+        @arg(positional = true, doc = "URL to Raziel (e.g. https://m3.shore.mbari.org/config)") razielUrl: String
+    ): Unit =
+        log.atInfo.log("Logging in to Raziel services")
+        Login.run(razielUrl)
 
     @mainargs.main(
         name = "service-health",
