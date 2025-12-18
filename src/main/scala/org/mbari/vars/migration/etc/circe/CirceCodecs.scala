@@ -8,6 +8,8 @@
 package org.mbari.vars.migration.etc.circe
 
 import io.circe.*
+import io.circe.generic.semiauto.*
+import org.mbari.vars.migration.domain.*
 import org.mbari.vars.migration.util.HexUtil
 
 import java.net.{URI, URL}
@@ -29,36 +31,5 @@ object CirceCodecs:
         .encodeString
         .contramap(_.toString)
 
-    val CustomPrinter: Printer = Printer(
-        dropNullValues = true,
-        indent = ""
-    )
-
-    /**
-     * Convert a circe Json object to a JSON string
-     *
-     * @param value
-     *   Any value with an implicit circe coder in scope
-     */
-    extension (json: Json) def stringify: String = CustomPrinter.print(json)
-
-    /**
-     * Convert an object to a JSON string
-     *
-     * @param value
-     *   Any value with an implicit circe coder in scope
-     */
-    extension [T: Encoder](value: T)
-        def stringify: String = Encoder[T]
-            .apply(value)
-            .deepDropNullValues
-            .stringify
-
-    extension [T: Decoder](jsonString: String) def toJson: Either[ParsingFailure, Json] = parser.parse(jsonString);
-
-    extension (jsonString: String)
-        def reify[T: Decoder]: Either[Error, T] =
-            for
-                json   <- jsonString.toJson
-                result <- Decoder[T].apply(json.hcursor)
-            yield result
+    given authorizationSCDecoder: Decoder[org.mbari.vars.migration.domain.AuthorizationSC] = deriveDecoder
+    given authorizationSCEncoder: Encoder[org.mbari.vars.migration.domain.AuthorizationSC] = deriveEncoder

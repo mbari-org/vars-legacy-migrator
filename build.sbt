@@ -58,6 +58,8 @@ lazy val root = project
             methanol,
             munit % Test,
             mainargs,
+            oniSdk,
+            razielSdk,
             scommons,
             slf4jSystem % Runtime,
             sqlserver % Runtime,

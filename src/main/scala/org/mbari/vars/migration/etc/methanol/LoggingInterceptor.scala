@@ -5,7 +5,7 @@
  * via any medium is strictly prohibited. Proprietary and confidential.
  */
 
-package org.mbari.vars.migration.ext.methanol
+package org.mbari.vars.migration.etc.methanol
 
 import com.github.mizosoft.methanol.Methanol
 import com.github.mizosoft.methanol.Methanol.Interceptor.Chain

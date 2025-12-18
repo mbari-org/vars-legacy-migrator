@@ -11,6 +11,8 @@ object Dependencies {
     lazy val mainargs        = "com.lihaoyi"                 %% "mainargs"                   % "0.7.7"
     lazy val methanol        = "com.github.mizosoft.methanol" % "methanol"                   % "1.8.4"
     lazy val munit           = "org.scalameta"               %% "munit"                      % "1.2.1"
+    lazy val oniSdk          = "org.mbari.vars"               % "oni-java-sdk"               % "0.0.4"
+    lazy val razielSdk       = "org.mbari.vars"               % "raziel-java-sdk"            % "0.0.2"
     lazy val scommons        = "org.mbari.commons"           %% "scommons"                   % "0.0.7"
     lazy val slf4jSystem     = "org.slf4j"                    % "slf4j-jdk-platform-logging" % "2.0.17"
     lazy val sqlserver       = "com.microsoft.sqlserver"      % "mssql-jdbc"                 % "12.10.2.jre11"
