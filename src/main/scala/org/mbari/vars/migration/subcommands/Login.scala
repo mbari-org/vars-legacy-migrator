@@ -16,12 +16,11 @@ import org.mbari.vars.raziel.sdk.r1.RazielKiotaClient
 
 import scala.jdk.OptionConverters.*
 
-
 object Login:
 
     private val SETTINGS_FILE_NAME: String = "raziel.txt"
 
-    def run(razielServiceUrl: String): Int = 
+    def run(razielServiceUrl: String): Int =
         println(s"Logging in to Raziel service at $razielServiceUrl")
 
         // HACK: Users will provide a URI that ends with config
@@ -46,7 +45,6 @@ object Login:
             return 1 // Return an error code
 
         0
-
 
     def save(uri: URI, username: String, password: String): Unit =
         val settingsDirectory = Settings.getSettingsDirectory

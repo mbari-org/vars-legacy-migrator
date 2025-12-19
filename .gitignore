@@ -4,6 +4,7 @@
 .history/
 .idea/
 .metals/
+.scala-build/
 .vscode/
 project/metals.sbt
 project/project

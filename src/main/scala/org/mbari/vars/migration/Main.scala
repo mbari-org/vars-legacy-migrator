@@ -7,12 +7,13 @@
 
 package org.mbari.vars.migration
 
-import mainargs.{arg, ParserForMethods, TokensReader}
+import mainargs.{ParserForMethods, TokensReader, arg}
 import org.mbari.scommons.etc.jdk.Loggers.given
 import org.mbari.vars.annosaurus.sdk.r1.AnnotationService
 import org.mbari.vars.migration.etc.mainargs.PathReader
 import org.mbari.vars.migration.model.MediaFactory
-import org.mbari.vars.migration.subcommands.{Login, MigrateAll, MigrateOne, ServiceHealth}
+import org.mbari.vars.migration.services.ServiceBuilder
+import org.mbari.vars.migration.subcommands.{Configure, Login, MigrateAll, MigrateOne, Preview, ServiceHealth}
 import org.mbari.vars.vampiresquid.sdk.r1.MediaService
 import vars.ToolBelt
 
@@ -23,11 +24,21 @@ object Main:
 
     // Needed for mainargs to parse Path arguments
     given TokensReader.Simple[Path] = PathReader
-    given AnnotationService         = AppConfig.Annosaurus.defaultService
-    given MediaService              = AppConfig.VampireSquid.defaultService
-    given ToolBelt                  = AppConfig.VarsLegacy.defaultToolBelt
 
     private val log = System.getLogger(Main.getClass.getName)
+
+    // Initialize the JDBC drivers
+    val driversToLoad = List(
+        "org.postgresql.Driver",
+        "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+        "net.sourceforge.jtds.jdbc.Driver"
+    )
+    driversToLoad.foreach(Class.forName)
+
+    private val toolBeltOption = Configure.load()
+    private val serviceBuilder = ServiceBuilder(true)
+    private val mediaFactory   = MediaFactory.load()
+
 
     def main(args: Array[String]): Unit =
         ParserForMethods(this).runOrExit(args.toSeq)
@@ -44,32 +55,63 @@ object Main:
         Login.run(razielUrl)
 
     @mainargs.main(
+        name = "configure",
+        doc = "configure the JDBC connection to the legacy VARS database"
+    )
+    def configure(): Unit =
+        Configure.run()
+
+    @mainargs.main(
         name = "service-health",
         doc = "Check the health of the services"
     )
     def serviceHealth(): Unit =
-        log.atInfo.log("Checking services")
-        ServiceHealth.run()
+        println("Checking services")
+        if !serviceCheck() then
+            println("Did you run `login` and `configure`? Go do that.")
+        else
+            given AnnotationService = serviceBuilder.annotationService
+            given MediaService = serviceBuilder.mediaService
+            ServiceHealth.run()
+
+    @mainargs.main(
+        name = "preview",
+        doc = "Preview the migration of a all video archives"
+    )
+    def preview(): Unit =
+        println("Running migration preview ...")
+        if !serviceCheck() then
+            println("Did you run `login` and `configure`? Go do that.")
+        else {
+            given AnnotationService = serviceBuilder.annotationService
+            given MediaService = serviceBuilder.mediaService
+            given MediaFactory = mediaFactory
+            given ToolBelt = toolBeltOption.get
+            Preview.run()
+        }
 
     @mainargs.main(
         name = "migrate-one",
         doc = "Migrate a single video archive"
     )
     def migrateOne(
-        @arg(positional = true, doc = "The videoArchiveName to migrate") videoArchiveName: String,
-        @arg(positional = true, doc = "Path to CSV lookup file") csvLookup: Path
+        @arg(positional = true, doc = "The videoArchiveName to migrate") videoArchiveName: String
     ): Unit =
-        log.atInfo.log(s"Running MigrateOne using CSV lookup file: $csvLookup with videoArchiveName: $videoArchiveName")
-        given MediaFactory = MediaFactory(csvLookup)
+        given AnnotationService = serviceBuilder.annotationService
+        given MediaService = serviceBuilder.mediaService
+        given MediaFactory = mediaFactory
+        given ToolBelt = toolBeltOption.get
         MigrateOne.run(videoArchiveName)
 
     @mainargs.main(
         name = "migrate-all",
         doc = "Migrate a single video archive"
     )
-    def migrateAll(@arg(positional = true, doc = "Path to CSV lookup file") csvLookup: Path): Unit =
-        log.atInfo.log(s"Running MigrateAll using CSV lookup file: $csvLookup")
-        given MediaFactory = MediaFactory(csvLookup)
+    def migrateAll(): Unit =
+        given AnnotationService = serviceBuilder.annotationService
+        given MediaService = serviceBuilder.mediaService
+        given MediaFactory = mediaFactory
+        given ToolBelt = toolBeltOption.get
         MigrateAll.run()
 
     @mainargs.main(
@@ -81,3 +123,10 @@ object Main:
     ): Unit =
         log.log(Level.INFO, "1. Running with message: " + msg)
         log.atInfo.log("2. Running with message: " + msg)
+
+
+    private def serviceCheck(): Boolean =
+        if (toolBeltOption.isDefined)
+            Login.load().isDefined
+        else
+            false

@@ -7,7 +7,6 @@
 
 package org.mbari.vars.migration.config
 
-
 import org.mbari.vars.migration.config.ServerConfig
 
 import java.time.Duration
@@ -63,6 +62,3 @@ object AppConfig:
             Option(config.getString("vampire.squid.secret")),
             config.getDuration("vampire.squid.timeout")
         )
-
-
-

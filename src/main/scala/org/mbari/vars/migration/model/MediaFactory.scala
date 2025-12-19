@@ -46,3 +46,10 @@ class MediaFactory(csvLookup: Path):
                 transform <- transforms.find(_.canTransform(videoArchive))
                 media     <- transform.transform(videoArchive)
             yield media
+            
+            
+object MediaFactory:
+    
+    def load(): MediaFactory =
+        val stationM = getClass.getResource("/VARS_IMAGES_dbo_VideoArchive_edited.csv")
+        new MediaFactory(Path.of(stationM.toURI))

@@ -189,7 +189,7 @@ object TiburonCoolpixTransform extends VideoArchiveTransform:
 
 class TripodPulseTransform(csvLookup: Path) extends VideoArchiveTransform:
 
-    // Read CSV file , first column is videoArhive name, second column is cameraId
+    // Read CSV file , first column is videoArchive name, second column is cameraId
     val cameraIdMap: Map[String, String] =
         Using(Source.fromFile(csvLookup.toFile)) { source =>
             source
