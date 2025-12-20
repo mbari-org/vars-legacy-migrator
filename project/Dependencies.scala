@@ -20,5 +20,5 @@ object Dependencies {
     lazy val sqlserver       = "com.microsoft.sqlserver"      % "mssql-jdbc"                 % "13.2.1.jre11"
     lazy val typesafeConfig  = "com.typesafe"                 % "config"                     % "1.4.5"
     lazy val vampireSquidSdk = "org.mbari.vars"               % "vampire-squid-java-sdk"     % "0.0.12"
-    lazy val varsLegacy      = "org.mbari.vars"               % "vars-legacy"                % "6.1.2-SNAPSHOT"
+    lazy val varsLegacy      = "org.mbari.vars"               % "vars-legacy"                % "6.1.0"
 }
