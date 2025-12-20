@@ -10,7 +10,8 @@ package org.mbari.vars.migration.services
 import org.mbari.vars.vampiresquid.sdk.r1.models.Media
 import vars.annotation.VideoArchive
 
-import java.net.URI
+import java.net.{URI, URL}
+import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.time.Instant
 import scala.io.Source
@@ -187,11 +188,11 @@ object TiburonCoolpixTransform extends VideoArchiveTransform:
         )
         Some(media)
 
-class TripodPulseTransform(csvLookup: Path) extends VideoArchiveTransform:
+class TripodPulseTransform(csvLookup: URL) extends VideoArchiveTransform:
 
     // Read CSV file , first column is videoArchive name, second column is cameraId
     val cameraIdMap: Map[String, String] =
-        Using(Source.fromFile(csvLookup.toFile)) { source =>
+        Using(Source.fromURL(csvLookup, "UTF-8")) { source =>
             source
                 .getLines()
                 .map { line =>

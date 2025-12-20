@@ -7,24 +7,15 @@
 
 package org.mbari.vars.migration.model
 
-import org.mbari.vars.migration.services.{
-    GridPulseTransform,
-    MacroCamTransform,
-    RoverChamberPulseTransform,
-    RoverFluoroPulseTransform,
-    RoverTransitPulseTransform,
-    SesTransform,
-    TiburonCoolpixTransform,
-    TripodPulseTransform,
-    VideoArchiveTransform
-}
+import org.mbari.vars.migration.services.{GridPulseTransform, MacroCamTransform, RoverChamberPulseTransform, RoverFluoroPulseTransform, RoverTransitPulseTransform, SesTransform, TiburonCoolpixTransform, TripodPulseTransform, VideoArchiveTransform}
 import org.mbari.vars.vampiresquid.sdk.r1.models.Media
 import vars.annotation.VideoArchive
 
+import java.net.URL
 import java.nio.file.Path
 import scala.jdk.CollectionConverters.*
 
-class MediaFactory(csvLookup: Path):
+class MediaFactory(csvLookup: URL):
 
     private val transforms: Seq[VideoArchiveTransform] = Seq(
         GridPulseTransform,
@@ -52,4 +43,4 @@ object MediaFactory:
     
     def load(): MediaFactory =
         val stationM = getClass.getResource("/VARS_IMAGES_dbo_VideoArchive_edited.csv")
-        new MediaFactory(Path.of(stationM.toURI))
+        new MediaFactory(stationM)

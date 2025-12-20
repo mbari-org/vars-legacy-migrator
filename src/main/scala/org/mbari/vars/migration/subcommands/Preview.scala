@@ -45,19 +45,20 @@ object Preview:
         opt match
             case None => log.atWarn.log(s"No VideoArchiveSet found for $videoArchiveName")
             case Some(videoArchiveSet) =>
-                val missionContact = videoArchiveSet.getCameraDeployments.asScala.  head.getChiefScientistName
+                val missionContact = videoArchiveSet.getCameraDeployments.asScala.head.getChiefScientistName
                 for videoArchive <- videoArchiveSet.getVideoArchives.asScala do
                     if migrateService.canMigrate(videoArchive) then
                         val media = mediaFactory.toMedia(videoArchive)
                         media match
                             case Some(m) =>
-                                val duration = m.getDuration.toMinutes
+                                val duration = Option(m.getDuration).map(_.toMinutes).getOrElse(0)
                                 println(s"---- Preview migration of ${videoArchive.getName} ----")
                                 println(s"Video Sequence Name: ${m.getVideoSequenceName}")
                                 println(s"Video Name:          ${m.getVideoName}")
                                 println(s"Video Reference URI: ${m.getUri}")
                                 println(s"Video start:         ${m.getStartTimestamp}")
                                 println(s"Video duration:      ${duration} minutes")
+                                println(s"# Annotations:       ${videoArchive.getVideoFrames.size()}")
 
                             case None    =>
                                 log.atWarn.log(s"Not able to transform ${videoArchive.getName} to a media object")

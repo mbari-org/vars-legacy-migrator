@@ -69,6 +69,7 @@ lazy val root = project
             vampireSquidSdk,
             varsLegacy
         ),
+        resolvers += Resolver.mavenLocal,
         scalacOptions ++= Seq(
             "-deprecation", // Emit warning and location for usages of deprecated APIs.
             "-encoding",

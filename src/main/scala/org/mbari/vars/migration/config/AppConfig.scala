@@ -55,10 +55,10 @@ object AppConfig:
 
     lazy val VampireSquid: ServerConfig =
         val endpoint =
-            val ep = config.getString("vampire.squid.endpoint")
+            val ep = config.getString("vampiresquid.endpoint")
             if ep.endsWith("/") then ep else s"$ep/"
         ServerConfig(
             endpoint,
-            Option(config.getString("vampire.squid.secret")),
-            config.getDuration("vampire.squid.timeout")
+            Option(config.getString("vampiresquid.secret")),
+            config.getDuration("vampiresquid.timeout")
         )

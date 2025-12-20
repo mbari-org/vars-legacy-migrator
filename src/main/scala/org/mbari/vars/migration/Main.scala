@@ -128,5 +128,7 @@ object Main:
     private def serviceCheck(): Boolean =
         if (toolBeltOption.isDefined)
             Login.load().isDefined
-        else
+        else {
+            println("No ToolBelt configured")
             false
+        }
