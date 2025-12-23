@@ -10,17 +10,18 @@ package org.mbari.vars.migration.subcommands
 import org.mbari.vars.annosaurus.sdk.r1.AnnotationService
 import org.mbari.vars.migration.model.MediaFactory
 import org.mbari.vars.migration.services.{MigrateService, VarsLegacyService}
-import org.mbari.vars.migration.subcommands.MigrateOne.{getClass, log}
 import org.mbari.vars.vampiresquid.sdk.r1.MediaService
 import vars.ToolBelt
-import org.mbari.vars.migration.etc.jdk.Loggers.given
 
 import scala.jdk.CollectionConverters.*
-import scala.util.control.NonFatal
+import vars.annotation.VideoArchive
+import org.mbari.vars.vampiresquid.sdk.r1.models.Media
+import scala.util.Try
+import org.mbari.vars.migration.model.MediaTransformError
+import org.mbari.vars.migration.etc.jdk.Durations
+import org.mbari.vars.migration.model.{CantMigrateError, NoVideoFramesError}
 
 object Preview:
-
-    private val log = System.getLogger(getClass.getName)
 
     def run()(using
         annotationService: AnnotationService,
@@ -31,6 +32,17 @@ object Preview:
         given varsLegacyService: VarsLegacyService = VarsLegacyService()
         given migrateService: MigrateService       = MigrateService()
         val videoArchiveNames                      = varsLegacyService.findAllVideoArchiveNames()
+        val columns = List(
+            "videoArchiveName",
+            "annotationCount",
+            "videoSequenceName",
+            "videoName",
+            "uri",
+            "startTimestamp",
+            "duration",
+            "notes"
+        )
+        println(columns.mkString(",")) // print header
         for videoArchiveName <- videoArchiveNames do preview(videoArchiveName)
 
     private def preview(videoArchiveName: String)(using
@@ -43,23 +55,64 @@ object Preview:
     ): Unit =
         val opt = varsLegacyService.findVideoArchiveSetByVideoArchiveName(videoArchiveName)
         opt match
-            case None => log.atWarn.log(s"No VideoArchiveSet found for $videoArchiveName")
+            case None => 
+                println(noMatchMsg(videoArchiveName))
             case Some(videoArchiveSet) =>
                 val missionContact = videoArchiveSet.getCameraDeployments.asScala.head.getChiefScientistName
                 for videoArchive <- videoArchiveSet.getVideoArchives.asScala do
                     if migrateService.canMigrate(videoArchive) then
                         val media = mediaFactory.toMedia(videoArchive)
                         media match
-                            case Some(m) =>
-                                val duration = Option(m.getDuration).map(_.toMinutes).getOrElse(0)
-                                println(s"---- Preview migration of ${videoArchive.getName} ----")
-                                println(s"Video Sequence Name: ${m.getVideoSequenceName}")
-                                println(s"Video Name:          ${m.getVideoName}")
-                                println(s"Video Reference URI: ${m.getUri}")
-                                println(s"Video start:         ${m.getStartTimestamp}")
-                                println(s"Video duration:      ${duration} minutes")
-                                println(s"# Annotations:       ${videoArchive.getVideoFrames.size()}")
+                            case Right(m) =>
+                                println(mediaMsg(videoArchive, m))
+                            case Left(ex)    =>
+                                println(errorMsg(ex))
+                    else if (videoArchive.getVideoFrames().size == 0)
+                        val ex = NoVideoFramesError(videoArchive.getName)
+                        println(errorMsg(ex))
+                    else if (videoArchive.getVideoFrames().size > 0)
+                        val ex = CantMigrateError(videoArchive.getName, s"Media with existing annotations in target database or unable to transform as mapping for ${videoArchive.getName} is missing")
+                        println(errorMsg(ex))
 
-                            case None    =>
-                                log.atWarn.log(s"Not able to transform ${videoArchive.getName} to a media object")
 
+
+
+    private def noMatchMsg(videoArchiveName: String): String = 
+        List(
+            videoArchiveName, 
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            s"No video archive named $videoArchiveName was found in the source database"
+        ).mkString(",")
+
+    private def mediaMsg(videoArchive: VideoArchive, media: Media): String = 
+        List(
+            videoArchive.getName(),
+            Try(videoArchive.getVideoFrames().size().toString()).getOrElse(0),
+            media.getVideoSequenceName(),
+            media.getVideoName(),
+            media.getUri(),
+            Try(media.getStartTimestamp().toString()).getOrElse(""),
+            Option(media.getDuration()).map(d => Durations.formatDuration(d)).getOrElse(""),
+            ""
+        ).mkString(",")
+
+    private def errorMsg(error: MediaTransformError): String = 
+        List(
+            error.videoArchiveName,
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            error.getMessage()
+        ).mkString(",")
+
+
+
+    

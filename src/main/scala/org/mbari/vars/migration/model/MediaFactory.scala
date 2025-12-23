@@ -14,6 +14,7 @@ import vars.annotation.VideoArchive
 import java.net.URL
 import java.nio.file.Path
 import scala.jdk.CollectionConverters.*
+import scala.util.control.NonFatal
 
 class MediaFactory(csvLookup: URL):
 
@@ -28,15 +29,21 @@ class MediaFactory(csvLookup: URL):
         TripodPulseTransform(csvLookup)
     )
 
-    def toMedia(videoArchive: VideoArchive): Option[Media] =
+    def toMedia(videoArchive: VideoArchive): Either[MediaTransformError, Media] =
         val vfs = if videoArchive.getVideoFrames == null then Nil else videoArchive.getVideoFrames.asScala
 
-        if vfs.isEmpty then None
+        if vfs.isEmpty then Left(NoVideoFramesError(videoArchive.getName))
         else
-            for
-                transform <- transforms.find(_.canTransform(videoArchive))
-                media     <- transform.transform(videoArchive)
-            yield media
+            val transformOpt = transforms.find(_.canTransform(videoArchive))
+            transformOpt match
+                case None => Left(UnsupportedVideoArchiveError(videoArchive.getName))
+                case Some(transform) =>
+                    try
+                        transform.transform(videoArchive) match
+                            case Some(media) => Right(media)
+                            case None        => Left(UnsupportedVideoArchiveError(videoArchive.getName))
+                    catch
+                        case NonFatal(e) => Left(TransformationFailedError(videoArchive.getName, e))
             
             
 object MediaFactory:
