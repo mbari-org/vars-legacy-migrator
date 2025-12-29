@@ -53,6 +53,7 @@ object Preview:
         varsLegacyService: VarsLegacyService,
         migrateService: MigrateService
     ): Unit =
+        println(s"Previewing VideoArchive: $videoArchiveName")
         val opt = varsLegacyService.findVideoArchiveSetByVideoArchiveName(videoArchiveName)
         opt match
             case None => 
@@ -72,6 +73,9 @@ object Preview:
                         println(errorMsg(ex))
                     else if (videoArchive.getVideoFrames().size > 0)
                         val ex = CantMigrateError(videoArchive.getName, s"Media with existing annotations in target database or unable to transform as mapping for ${videoArchive.getName} is missing")
+                        println(errorMsg(ex))
+                    else
+                        val ex = CantMigrateError(videoArchive.getName, s"Unknown reason")
                         println(errorMsg(ex))
 
 
