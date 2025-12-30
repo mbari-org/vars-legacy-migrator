@@ -37,6 +37,7 @@ object Preview:
             "annotationCount",
             "videoSequenceName",
             "videoName",
+            "cameraId",
             "uri",
             "startTimestamp",
             "duration",
@@ -53,7 +54,7 @@ object Preview:
         varsLegacyService: VarsLegacyService,
         migrateService: MigrateService
     ): Unit =
-        println(s"Previewing VideoArchive: $videoArchiveName")
+        // println(s"Previewing VideoArchive: $videoArchiveName")
         val opt = varsLegacyService.findVideoArchiveSetByVideoArchiveName(videoArchiveName)
         opt match
             case None => 
@@ -61,22 +62,23 @@ object Preview:
             case Some(videoArchiveSet) =>
                 val missionContact = videoArchiveSet.getCameraDeployments.asScala.head.getChiefScientistName
                 for videoArchive <- videoArchiveSet.getVideoArchives.asScala do
+                    val annotationCount = Try(videoArchive.getVideoFrames.size()).getOrElse(0)
                     if migrateService.canMigrate(videoArchive) then
                         val media = mediaFactory.toMedia(videoArchive)
                         media match
                             case Right(m) =>
                                 println(mediaMsg(videoArchive, m))
                             case Left(ex)    =>
-                                println(errorMsg(ex))
-                    else if (videoArchive.getVideoFrames().size == 0)
+                                println(errorMsg(ex, annotationCount))
+                    else if (annotationCount == 0)
                         val ex = NoVideoFramesError(videoArchive.getName)
-                        println(errorMsg(ex))
-                    else if (videoArchive.getVideoFrames().size > 0)
+                        println(errorMsg(ex, 0))
+                    else if (annotationCount > 0)
                         val ex = CantMigrateError(videoArchive.getName, s"Media with existing annotations in target database or unable to transform as mapping for ${videoArchive.getName} is missing")
-                        println(errorMsg(ex))
+                        println(errorMsg(ex, annotationCount))
                     else
                         val ex = CantMigrateError(videoArchive.getName, s"Unknown reason")
-                        println(errorMsg(ex))
+                        println(errorMsg(ex, annotationCount))
 
 
 
@@ -84,6 +86,7 @@ object Preview:
     private def noMatchMsg(videoArchiveName: String): String = 
         List(
             videoArchiveName, 
+            "",
             "",
             "",
             "",
@@ -99,15 +102,17 @@ object Preview:
             Try(videoArchive.getVideoFrames().size().toString()).getOrElse(0),
             media.getVideoSequenceName(),
             media.getVideoName(),
+            media.getCameraId(),
             media.getUri(),
             Try(media.getStartTimestamp().toString()).getOrElse(""),
             Option(media.getDuration()).map(d => Durations.formatDuration(d)).getOrElse(""),
             ""
         ).mkString(",")
 
-    private def errorMsg(error: MediaTransformError): String = 
+    private def errorMsg(error: MediaTransformError, annotationCount: Int): String = 
         List(
             error.videoArchiveName,
+            annotationCount.toString(),
             "",
             "",
             "",

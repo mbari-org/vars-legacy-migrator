@@ -208,7 +208,6 @@ class TripodPulseTransform(csvLookup: URL) extends VideoArchiveTransform:
         videoArchive.getName.toLowerCase.startsWith("tripod pulse")
 
     override def transform(videoArchive: VideoArchive): Option[Media] =
-        val deployment = extractTwoDigitNumber(videoArchive.getName)
         for deployment <- extractTwoDigitNumber(videoArchive.getName)
         yield
             val cameraId          = extractCameraId(videoArchive.getName)
@@ -229,9 +228,10 @@ class TripodPulseTransform(csvLookup: URL) extends VideoArchiveTransform:
             media
 
     def extractCameraId(videoArchiveName: String): String =
-        if videoArchiveName.startsWith("TRIPOD PULSE") then
-            if videoArchiveName.contains("DUAL") then "Tripod Dual Far Field"
-            else if videoArchiveName.contains("NEA") then "Tripod Dual Near Field"
-            else if videoArchiveName.contains("SOLO") then "Tripod Solo Far Field"
+        val upper = videoArchiveName.toUpperCase()
+        if upper.startsWith("TRIPOD PULSE") then
+            if upper.contains("DUAL") then "Tripod Dual Far Field"
+            else if upper.contains("NEA") then "Tripod Dual Near Field"
+            else if upper.contains("SOLO") then "Tripod Solo Far Field"
             else "Tripod Mixed Far Field"
         else "Unknown"
