@@ -12,13 +12,15 @@ import org.mbari.vars.vampiresquid.sdk.r1.models.Media
 import vars.annotation.VideoArchive
 
 import java.net.URL
-import java.nio.file.Path
 import scala.jdk.CollectionConverters.*
 import scala.util.control.NonFatal
+import org.mbari.vars.migration.services.SpecialCasesTransform
 
 class MediaFactory(csvLookup: URL):
 
+
     private val transforms: Seq[VideoArchiveTransform] = Seq(
+        SpecialCasesTransform,
         GridPulseTransform,
         MacroCamTransform,
         RoverChamberPulseTransform,
