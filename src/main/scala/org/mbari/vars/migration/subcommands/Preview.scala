@@ -20,6 +20,7 @@ import scala.util.Try
 import org.mbari.vars.migration.model.MediaTransformError
 import org.mbari.vars.migration.etc.jdk.Durations
 import org.mbari.vars.migration.model.{CantMigrateError, NoVideoFramesError}
+import scala.jdk.CollectionConverters.*
 
 object Preview:
 
@@ -61,24 +62,28 @@ object Preview:
                 println(noMatchMsg(videoArchiveName))
             case Some(videoArchiveSet) =>
                 val missionContact = videoArchiveSet.getCameraDeployments.asScala.head.getChiefScientistName
-                for videoArchive <- videoArchiveSet.getVideoArchives.asScala do
-                    val annotationCount = Try(videoArchive.getVideoFrames.size()).getOrElse(0)
-                    if migrateService.canMigrate(videoArchive) then
-                        val media = mediaFactory.toMedia(videoArchive)
-                        media match
-                            case Right(m) =>
-                                println(mediaMsg(videoArchive, m))
-                            case Left(ex)    =>
-                                println(errorMsg(ex, annotationCount))
-                    else if (annotationCount == 0)
-                        val ex = NoVideoFramesError(videoArchive.getName)
-                        println(errorMsg(ex, 0))
-                    else if (annotationCount > 0)
-                        val ex = CantMigrateError(videoArchive.getName, s"Media with existing annotations in target database or unable to transform as mapping for ${videoArchive.getName} is missing")
-                        println(errorMsg(ex, annotationCount))
-                    else
-                        val ex = CantMigrateError(videoArchive.getName, s"Unknown reason")
-                        println(errorMsg(ex, annotationCount))
+                val videoArchive = videoArchiveSet.getVideoArchives.asScala.find(_.getName == videoArchiveName)
+                videoArchive match
+                    case None =>
+                        println(noMatchMsg(videoArchiveName))
+                    case Some(videoArchive) =>
+                        val annotationCount = Try(videoArchive.getVideoFrames.size()).getOrElse(0)
+                        if migrateService.canMigrate(videoArchive) then
+                            val media = mediaFactory.toMedia(videoArchive)
+                            media match
+                                case Right(m) =>
+                                    println(mediaMsg(videoArchive, m))
+                                case Left(ex)    =>
+                                    println(errorMsg(ex, annotationCount))
+                        else if (annotationCount == 0)
+                            val ex = NoVideoFramesError(videoArchive.getName)
+                            println(errorMsg(ex, 0))
+                        else if (annotationCount > 0)
+                            val ex = CantMigrateError(videoArchive.getName, s"Media with existing annotations in target database or unable to transform as mapping for ${videoArchive.getName} is missing")
+                            println(errorMsg(ex, annotationCount))
+                        else
+                            val ex = CantMigrateError(videoArchive.getName, s"Unknown reason")
+                            println(errorMsg(ex, annotationCount))
 
 
 

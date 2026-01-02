@@ -31,4 +31,6 @@ class VarsLegacyService(using toolBelt: ToolBelt):
             .findAllVideoArchiveNames()
             .asScala
             .toSeq
+            .map(_.trim)
+            .distinct
             .sorted

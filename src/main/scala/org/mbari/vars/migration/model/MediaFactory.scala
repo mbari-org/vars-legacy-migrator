@@ -7,7 +7,7 @@
 
 package org.mbari.vars.migration.model
 
-import org.mbari.vars.migration.services.{GridPulseTransform, MacroCamTransform, RoverChamberPulseTransform, RoverFluoroPulseTransform, RoverTransitPulseTransform, SesTransform, TiburonCoolpixTransform, TripodPulseTransform, VideoArchiveTransform}
+import org.mbari.vars.migration.services.{GridPulseTransform, RoverChamberPulseTransform, RoverFluoroPulseTransform, RoverTransitPulseTransform, SesTransform, TiburonCoolpixTransform, TripodPulseTransform, VideoArchiveTransform}
 import org.mbari.vars.vampiresquid.sdk.r1.models.Media
 import vars.annotation.VideoArchive
 
@@ -15,14 +15,17 @@ import java.net.URL
 import scala.jdk.CollectionConverters.*
 import scala.util.control.NonFatal
 import org.mbari.vars.migration.services.SpecialCasesTransform
+import org.mbari.vars.migration.services.BiauvTransform
+import org.mbari.vars.migration.services.SimpaTransform
 
 class MediaFactory(csvLookup: URL):
 
 
     private val transforms: Seq[VideoArchiveTransform] = Seq(
         SpecialCasesTransform,
+        BiauvTransform,
+        SimpaTransform,
         GridPulseTransform,
-        MacroCamTransform,
         RoverChamberPulseTransform,
         RoverFluoroPulseTransform,
         RoverTransitPulseTransform,
