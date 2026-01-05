@@ -7,10 +7,10 @@
 
 package org.mbari.vars.migration.services
 
-
 import org.mbari.vars.annosaurus.sdk.r1.{AnnosaurusHttpClient, AnnotationService, VideoReferenceService}
 import org.mbari.vars.migration.config.AppConfig
 import org.mbari.vars.migration.etc.sdk.Futures.*
+import org.mbari.vars.migration.subcommands.Login
 import org.mbari.vars.oni.sdk.OniFactory
 import org.mbari.vars.oni.sdk.kiota.Oni
 import org.mbari.vars.oni.sdk.r1.{ConceptService, OniKiotaClient, PreferencesService, UserService}
@@ -19,16 +19,13 @@ import org.mbari.vars.raziel.sdk.r1.models.EndpointConfig
 import org.mbari.vars.vampiresquid.sdk.VampireSquidFactory
 import org.mbari.vars.vampiresquid.sdk.kiota.VampireSquid
 import org.mbari.vars.vampiresquid.sdk.r1.{MediaService, VampireSquidKiotaClient}
-import org.mbari.vars.migration.subcommands.Login
 
 import java.net.URI
 import java.time.Duration
+import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters.*
-import scala.jdk.FutureConverters.*
 import scala.util.control.NonFatal
-import java.util.concurrent.TimeUnit
-
 
 /**
  * ServiceBuilder is a singleton object that provides access to various services such as AnnotationService,
@@ -125,8 +122,6 @@ class ServiceBuilder(load: Boolean = true):
             .getOrElse(
                 throw new RuntimeException(s"User ${razielConnectionParams.username()} not found in Oni")
             )
-        
-            
 
 object ServiceBuilder:
 

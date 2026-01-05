@@ -7,7 +7,7 @@
 
 package org.mbari.vars.migration
 
-import mainargs.{ParserForMethods, TokensReader, arg}
+import mainargs.{arg, ParserForMethods, TokensReader}
 import org.mbari.scommons.etc.jdk.Loggers.given
 import org.mbari.vars.annosaurus.sdk.r1.AnnotationService
 import org.mbari.vars.migration.etc.mainargs.PathReader
@@ -39,7 +39,6 @@ object Main:
     private val serviceBuilder = ServiceBuilder(true)
     private val mediaFactory   = MediaFactory.load()
 
-
     def main(args: Array[String]): Unit =
         ParserForMethods(this).runOrExit(args.toSeq)
         System.exit(0)
@@ -67,11 +66,10 @@ object Main:
     )
     def serviceHealth(): Unit =
         println("Checking services")
-        if !serviceCheck() then
-            println("Did you run `login` and `configure`? Go do that.")
+        if !serviceCheck() then println("Did you run `login` and `configure`? Go do that.")
         else
             given AnnotationService = serviceBuilder.annotationService
-            given MediaService = serviceBuilder.mediaService
+            given MediaService      = serviceBuilder.mediaService
             ServiceHealth.run()
 
     @mainargs.main(
@@ -80,15 +78,13 @@ object Main:
     )
     def preview(): Unit =
         println("Running migration preview ...")
-        if !serviceCheck() then
-            println("Did you run `login` and `configure`? Go do that.")
-        else {
+        if !serviceCheck() then println("Did you run `login` and `configure`? Go do that.")
+        else
             given AnnotationService = serviceBuilder.annotationService
-            given MediaService = serviceBuilder.mediaService
-            given MediaFactory = mediaFactory
-            given ToolBelt = toolBeltOption.get
+            given MediaService      = serviceBuilder.mediaService
+            given MediaFactory      = mediaFactory
+            given ToolBelt          = toolBeltOption.get
             Preview.run()
-        }
 
     @mainargs.main(
         name = "migrate-one",
@@ -98,9 +94,9 @@ object Main:
         @arg(positional = true, doc = "The videoArchiveName to migrate") videoArchiveName: String
     ): Unit =
         given AnnotationService = serviceBuilder.annotationService
-        given MediaService = serviceBuilder.mediaService
-        given MediaFactory = mediaFactory
-        given ToolBelt = toolBeltOption.get
+        given MediaService      = serviceBuilder.mediaService
+        given MediaFactory      = mediaFactory
+        given ToolBelt          = toolBeltOption.get
         MigrateOne.run(videoArchiveName)
 
     @mainargs.main(
@@ -109,9 +105,9 @@ object Main:
     )
     def migrateAll(): Unit =
         given AnnotationService = serviceBuilder.annotationService
-        given MediaService = serviceBuilder.mediaService
-        given MediaFactory = mediaFactory
-        given ToolBelt = toolBeltOption.get
+        given MediaService      = serviceBuilder.mediaService
+        given MediaFactory      = mediaFactory
+        given ToolBelt          = toolBeltOption.get
         MigrateAll.run()
 
     @mainargs.main(
@@ -124,10 +120,8 @@ object Main:
         log.log(Level.INFO, "1. Running with message: " + msg)
         log.atInfo.log("2. Running with message: " + msg)
 
-
     private def serviceCheck(): Boolean =
-        if (toolBeltOption.isDefined)
-            Login.load().isDefined
+        if toolBeltOption.isDefined then Login.load().isDefined
         else {
             println("No ToolBelt configured")
             false

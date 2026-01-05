@@ -8,19 +8,16 @@
 package org.mbari.vars.migration.subcommands
 
 import org.mbari.vars.annosaurus.sdk.r1.AnnotationService
-import org.mbari.vars.migration.model.MediaFactory
+import org.mbari.vars.migration.etc.jdk.Durations
+import org.mbari.vars.migration.model.{CantMigrateError, MediaFactory, MediaTransformError, NoVideoFramesError}
 import org.mbari.vars.migration.services.{MigrateService, VarsLegacyService}
 import org.mbari.vars.vampiresquid.sdk.r1.MediaService
+import org.mbari.vars.vampiresquid.sdk.r1.models.Media
 import vars.ToolBelt
+import vars.annotation.VideoArchive
 
 import scala.jdk.CollectionConverters.*
-import vars.annotation.VideoArchive
-import org.mbari.vars.vampiresquid.sdk.r1.models.Media
 import scala.util.Try
-import org.mbari.vars.migration.model.MediaTransformError
-import org.mbari.vars.migration.etc.jdk.Durations
-import org.mbari.vars.migration.model.{CantMigrateError, NoVideoFramesError}
-import scala.jdk.CollectionConverters.*
 
 object Preview:
 
@@ -33,7 +30,7 @@ object Preview:
         given varsLegacyService: VarsLegacyService = VarsLegacyService()
         given migrateService: MigrateService       = MigrateService()
         val videoArchiveNames                      = varsLegacyService.findAllVideoArchiveNames()
-        val columns = List(
+        val columns                                = List(
             "videoArchiveName",
             "annotationCount",
             "videoSequenceName",
@@ -58,13 +55,13 @@ object Preview:
         // println(s"Previewing VideoArchive: $videoArchiveName")
         val opt = varsLegacyService.findVideoArchiveSetByVideoArchiveName(videoArchiveName)
         opt match
-            case None => 
+            case None                  =>
                 println(noMatchMsg(videoArchiveName))
             case Some(videoArchiveSet) =>
                 val missionContact = videoArchiveSet.getCameraDeployments.asScala.head.getChiefScientistName
-                val videoArchive = videoArchiveSet.getVideoArchives.asScala.find(_.getName == videoArchiveName)
+                val videoArchive   = videoArchiveSet.getVideoArchives.asScala.find(_.getName == videoArchiveName)
                 videoArchive match
-                    case None =>
+                    case None               =>
                         println(noMatchMsg(videoArchiveName))
                     case Some(videoArchive) =>
                         val annotationCount = Try(videoArchive.getVideoFrames.size()).getOrElse(0)
@@ -73,24 +70,24 @@ object Preview:
                             media match
                                 case Right(m) =>
                                     println(mediaMsg(videoArchive, m))
-                                case Left(ex)    =>
+                                case Left(ex) =>
                                     println(errorMsg(ex, annotationCount))
-                        else if (annotationCount == 0)
+                        else if annotationCount == 0 then
                             val ex = NoVideoFramesError(videoArchive.getName)
                             println(errorMsg(ex, 0))
-                        else if (annotationCount > 0)
-                            val ex = CantMigrateError(videoArchive.getName, s"Media with existing annotations in target database or unable to transform as mapping for ${videoArchive.getName} is missing")
+                        else if annotationCount > 0 then
+                            val ex = CantMigrateError(
+                                videoArchive.getName,
+                                s"Media with existing annotations in target database or unable to transform as mapping for ${videoArchive.getName} is missing"
+                            )
                             println(errorMsg(ex, annotationCount))
                         else
                             val ex = CantMigrateError(videoArchive.getName, s"Unknown reason")
                             println(errorMsg(ex, annotationCount))
 
-
-
-
-    private def noMatchMsg(videoArchiveName: String): String = 
+    private def noMatchMsg(videoArchiveName: String): String =
         List(
-            videoArchiveName, 
+            videoArchiveName,
             "",
             "",
             "",
@@ -101,7 +98,7 @@ object Preview:
             s"No video archive named $videoArchiveName was found in the source database"
         ).mkString(",")
 
-    private def mediaMsg(videoArchive: VideoArchive, media: Media): String = 
+    private def mediaMsg(videoArchive: VideoArchive, media: Media): String =
         List(
             videoArchive.getName(),
             Try(videoArchive.getVideoFrames().size().toString()).getOrElse(0),
@@ -114,7 +111,7 @@ object Preview:
             ""
         ).mkString(",")
 
-    private def errorMsg(error: MediaTransformError, annotationCount: Int): String = 
+    private def errorMsg(error: MediaTransformError, annotationCount: Int): String =
         List(
             error.videoArchiveName,
             annotationCount.toString(),
@@ -126,7 +123,3 @@ object Preview:
             "",
             error.getMessage()
         ).mkString(",")
-
-
-
-    

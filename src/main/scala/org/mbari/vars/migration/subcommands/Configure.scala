@@ -7,6 +7,7 @@
 
 package org.mbari.vars.migration.subcommands
 
+import org.mbari.vars.migration.etc.jdk.Loggers.given
 import org.mbari.vars.migration.services.raziel.Settings
 import vars.{ToolBelt, ToolBeltFactory}
 
@@ -14,7 +15,6 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.sql.DriverManager
 import scala.util.{Failure, Success, Try, Using}
-import org.mbari.vars.migration.etc.jdk.Loggers.given
 
 object Configure:
 

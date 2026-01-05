@@ -7,19 +7,27 @@
 
 package org.mbari.vars.migration.model
 
-import org.mbari.vars.migration.services.{GridPulseTransform, RoverChamberPulseTransform, RoverFluoroPulseTransform, RoverTransitPulseTransform, SesTransform, TiburonCoolpixTransform, TripodPulseTransform, VideoArchiveTransform}
+import org.mbari.vars.migration.services.{
+    BiauvTransform,
+    GridPulseTransform,
+    RoverChamberPulseTransform,
+    RoverFluoroPulseTransform,
+    RoverTransitPulseTransform,
+    SesTransform,
+    SimpaTransform,
+    SpecialCasesTransform,
+    TiburonCoolpixTransform,
+    TripodPulseTransform,
+    VideoArchiveTransform
+}
 import org.mbari.vars.vampiresquid.sdk.r1.models.Media
 import vars.annotation.VideoArchive
 
 import java.net.URL
 import scala.jdk.CollectionConverters.*
 import scala.util.control.NonFatal
-import org.mbari.vars.migration.services.SpecialCasesTransform
-import org.mbari.vars.migration.services.BiauvTransform
-import org.mbari.vars.migration.services.SimpaTransform
 
 class MediaFactory(csvLookup: URL):
-
 
     private val transforms: Seq[VideoArchiveTransform] = Seq(
         SpecialCasesTransform,
@@ -41,18 +49,16 @@ class MediaFactory(csvLookup: URL):
         else
             val transformOpt = transforms.find(_.canTransform(videoArchive))
             transformOpt match
-                case None => Left(UnsupportedVideoArchiveError(videoArchive.getName))
+                case None            => Left(UnsupportedVideoArchiveError(videoArchive.getName))
                 case Some(transform) =>
                     try
                         transform.transform(videoArchive) match
                             case Some(media) => Right(media)
                             case None        => Left(UnsupportedVideoArchiveError(videoArchive.getName))
-                    catch
-                        case NonFatal(e) => Left(TransformationFailedError(videoArchive.getName, e))
-            
-            
+                    catch case NonFatal(e) => Left(TransformationFailedError(videoArchive.getName, e))
+
 object MediaFactory:
-    
+
     def load(): MediaFactory =
         val stationM = getClass.getResource("/VARS_IMAGES_dbo_VideoArchive_edited.csv")
         new MediaFactory(stationM)

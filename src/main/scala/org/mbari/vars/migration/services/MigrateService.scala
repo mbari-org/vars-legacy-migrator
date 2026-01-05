@@ -9,15 +9,13 @@ package org.mbari.vars.migration.services
 
 import org.mbari.scommons.etc.jdk.Loggers.given
 import org.mbari.vars.annosaurus.sdk.r1.{AnnosaurusHttpClient, AnnotationService}
-import org.mbari.vars.migration.model.{AnnotationFactory, MediaFactory}
+import org.mbari.vars.migration.model.{AnnotationFactory, MediaFactory, MediaTransformError, TransformationFailedError}
 import org.mbari.vars.vampiresquid.sdk.r1.MediaService
 import org.mbari.vars.vampiresquid.sdk.r1.models.Media
 import vars.ToolBelt
 import vars.annotation.VideoArchive
 
 import scala.jdk.CollectionConverters.*
-import org.mbari.vars.migration.model.MediaTransformError
-import org.mbari.vars.migration.model.TransformationFailedError
 
 class MigrateService(using
     annotationService: AnnotationService,
@@ -35,7 +33,7 @@ class MigrateService(using
             findOrCreateMedia(videoArchive) match
                 case Right(media) =>
                     migrateAnnotations(videoArchive, media, missionContact) // TODO - Implement this
-                case Left(ex)        =>
+                case Left(ex)     =>
                     log.atWarn.withCause(ex).log(s"Not able to transform ${videoArchive.getName} to a media object")
 
     def canMigrate(videoArchive: VideoArchive): Boolean =
@@ -66,12 +64,13 @@ class MigrateService(using
                                 log.atDebug.log("No annotations found for this media. Ready to migrate.")
                                 true
                         case None                => true
-                case Left(ex)        =>
-                    log.atWarn.withCause(ex).log(s"SKIPPING. Not able to transform ${videoArchive.getName} to a media object")
+                case Left(ex)     =>
+                    log.atWarn
+                        .withCause(ex)
+                        .log(s"SKIPPING. Not able to transform ${videoArchive.getName} to a media object")
                     false
 
     private def findOrCreateMedia(videoArchive: VideoArchive): Either[MediaTransformError, Media] =
-        
         mediaFactory.toMedia(videoArchive) match
             case Right(newMedia) =>
                 val existingMediaOpt = vampireSquidService.findByUri(newMedia.getUri)
@@ -80,9 +79,14 @@ class MigrateService(using
                     case None                =>
                         vampireSquidService.create(newMedia) match
                             case Some(createdMedia) => Right(createdMedia)
-                            case None               => Left(TransformationFailedError(videoArchive.getName, new Exception("Failed to create media in VampireSquid")))
+                            case None               =>
+                                Left(
+                                    TransformationFailedError(
+                                        videoArchive.getName,
+                                        new Exception("Failed to create media in VampireSquid")
+                                    )
+                                )
             case Left(err)       => Left(err)
-        
 
     def migrateAnnotations(videoArchive: VideoArchive, media: Media, group: String): Unit =
         // Convert observations to annotations

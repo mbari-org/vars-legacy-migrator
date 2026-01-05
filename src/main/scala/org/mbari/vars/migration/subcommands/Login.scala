@@ -7,13 +7,11 @@
 
 package org.mbari.vars.migration.subcommands
 
-import java.net.URI
-
-import org.mbari.vars.migration.config.AppConfig
 import org.mbari.vars.migration.services.ServiceBuilder
 import org.mbari.vars.migration.services.raziel.{RazielConnectionParams, Settings}
 import org.mbari.vars.raziel.sdk.r1.RazielKiotaClient
 
+import java.net.URI
 import scala.jdk.OptionConverters.*
 
 object Login:

@@ -9,11 +9,6 @@ package org.mbari.vars.migration.etc.jdk
 
 import java.time.Duration
 
-object Durations {
-  def formatDuration(duration: Duration): String =
-     String.format("%02d:%02d:%02d", 
-        duration.toHours(),
-        duration.toMinutesPart(),
-        duration.toSecondsPart());
-
-}
+object Durations:
+    def formatDuration(duration: Duration): String =
+        String.format("%02d:%02d:%02d", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());

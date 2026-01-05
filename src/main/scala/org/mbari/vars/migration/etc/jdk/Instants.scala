@@ -7,11 +7,12 @@
 
 package org.mbari.vars.migration.etc.jdk
 
-import java.time.{Instant, LocalDate, ZoneOffset}
+import java.time.{LocalDate, ZoneOffset}
 
 object Instants:
 
     def asInstant(year: Int, dayOfYear: Int): java.time.Instant =
-        LocalDate.ofYearDay(year, dayOfYear)
+        LocalDate
+            .ofYearDay(year, dayOfYear)
             .atStartOfDay(ZoneOffset.UTC)
             .toInstant()
