@@ -70,6 +70,8 @@ object Main:
         else
             given AnnotationService = serviceBuilder.annotationService
             given MediaService      = serviceBuilder.mediaService
+            if (toolBeltOption.isEmpty) then
+                println("No ToolBelt configured")
             ServiceHealth.run()
 
     @mainargs.main(

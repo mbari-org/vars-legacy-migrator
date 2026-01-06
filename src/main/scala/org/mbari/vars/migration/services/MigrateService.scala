@@ -97,11 +97,11 @@ class MigrateService(using
         log.atInfo.log(s"Creating ${annotations.size} annotations for ${videoArchive.getName}")
 
         // TODO - Create annotations
-        annotations
-            .grouped(50)
-            .foreach(annos =>
-                val json = gson.toJson(annos.asJava)
-                log.atInfo.log(s"SENDING:\n$json")
-            )
-//        annotations.grouped(50)
-//            .foreach(annos => annotationService.createAnnotations(annos.asJava).join())
+        // annotations
+        //     .grouped(50)
+        //     .foreach(annos =>
+        //         val json = gson.toJson(annos.asJava)
+        //         log.atInfo.log(s"SENDING:\n$json")
+        //     )
+        annotations.grouped(50)
+            .foreach(annos => annotationService.createAnnotations(annos.asJava).join())

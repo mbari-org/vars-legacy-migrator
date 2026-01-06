@@ -14,7 +14,7 @@ import vars.annotation.VideoArchive
 
 import java.net.{URI, URL}
 import java.time.format.DateTimeFormatter
-import java.time.{Instant, ZoneOffset}
+import java.time.{Instant, LocalDate, ZoneOffset, ZonedDateTime}
 import scala.io.Source
 import scala.jdk.CollectionConverters.*
 import scala.util.Using
@@ -28,21 +28,45 @@ def extractFourDigitNumber(s: String): Option[String] =
     val regex: Regex = """(\d{4})""".r
     regex.findFirstIn(s)
 
-def extractDashNumber(s: String): Option[String] =
-    val regex0: Regex = """.*\s+(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})""".r
-    regex0.findFirstMatchIn(s) match
-        case Some(m) => Some(m.group(1))
-        case None    =>
+def extractDate(s: String): Option[Instant] = {
+    val pattern: Regex = """(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})""".r
+    pattern.findFirstMatchIn(s).map { m =>
+        val day = m.group(1).toInt
+        val month = m.group(2)
+        val year = m.group(3).toInt
+        val dateStr = s"$month $day $year 00:00:00"
+        val formatter = DateTimeFormatter
+            .ofPattern("[MMMM][MMM] d yyyy HH:mm:ss")
+            .withZone(ZoneOffset.UTC)
+        val t = formatter.parse(dateStr)
+        ZonedDateTime.from(t).toInstant()
+    }
+}
+
+def extractDashNumber(s: String): Option[String] = {
+    extractDate(s) match {
+        case Some(date) =>
+            val f = DateTimeFormatter.ofPattern("yyyyMMdd")
+            Some(f.format(date.atZone(ZoneOffset.UTC)))
+        case None =>
             val regex1: Regex = """-(\d+)""".r
             regex1.findFirstMatchIn(s).map(_.group(1))
-
+    }
+}
+                
 def findStartTimestamp(videoArchive: VideoArchive): Option[Instant] =
-    val vfs = if videoArchive.getVideoFrames == null then Nil else videoArchive.getVideoFrames.asScala
-    vfs
-        .filter(f => f.getRecordedDate != null)
-        .map(f => f.getRecordedDate.toInstant)
-        .sorted
-        .headOption
+    val videoFrames = Option(videoArchive.getVideoFrames)
+        .map(_.asScala)
+        .getOrElse(Nil)
+    
+    val earliestFrameTime = videoFrames
+        .flatMap(f => Option(f.getRecordedDate))
+        .map(_.toInstant)
+        .minOption
+    
+    earliestFrameTime
+        .orElse(extractDate(videoArchive.getName))
+        .orElse(Some(Instant.EPOCH))
 
 trait VideoArchiveTransform:
 
@@ -55,7 +79,7 @@ trait VideoArchiveTransform:
 object BiauvTransform extends VideoArchiveTransform:
 
     private val pattern   = """.*-(\d{4})\.(\d{3})\.(\d{2})""".r
-    private val formatter = DateTimeFormatter.ofPattern("yyyyMM")
+    private val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
 
     override def cameraId: String = "Benthic Imaging AUV"
 
@@ -70,7 +94,7 @@ object BiauvTransform extends VideoArchiveTransform:
                 val dayOfYear         = m.group(2)
                 val sequence          = m.group(3)
                 val timestamp         = Instants.asInstant(year.toInt, dayOfYear.toInt)
-                val videoSequenceName = s"BIAUV ${formatter.format(timestamp.atZone(ZoneOffset.UTC))}-$sequence"
+                val videoSequenceName = s"BIAUV ${formatter.format(timestamp.atZone(ZoneOffset.UTC))} $sequence"
                 val uriString         = s"$UriPrefix${videoSequenceName.replace(" ", "_").replace("-", "_")}"
                 val uri               = URI.create(uriString)
                 val media             = Media()
@@ -346,7 +370,7 @@ object SpecialCasesTransform extends VideoArchiveTransform:
             .withVideoDescription("Rover_transit_Pulse_60_Ken imported from VARS_Images.")
             .build(),
         "Rover_transit_Pulse_71"      -> MediaBuilder()
-            .withVideoSequenceName("Station M Pulse 71 - Benthic Rover Transit Camer")
+            .withVideoSequenceName("Station M Pulse 71 - Benthic Rover Transit Camera")
             .withVideoName("Station M Pulse 71 - Benthic Rover Transit Camera - Ken")
             .withCameraId("Benthic Rover Transit Camera")
             .withUri(URI.create("urn:imagecollection:org.mbari:Station_M_Pulse_71__Ken__Benthic_Rover_Transit_Camera"))
@@ -362,14 +386,14 @@ object SpecialCasesTransform extends VideoArchiveTransform:
         "S0055-01-tripod"             -> MediaBuilder()
             .withCameraId("Tripod Far Field M")
             .withVideoSequenceName("Station M Pulse 55 - Tripod Far Field M")
-            .withVideoName("Tripod Pulse 55-S1 - Tripod Far Field M")
+            .withVideoName("Tripod Pulse 55-01 - Tripod Far Field M")
             .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_55-S1__Tripod_Far_Field_M"))
             .withVideoDescription("S0055-01-tripod imported from VARS_Images.")
             .build(),
         "S6510-01-tripod"             -> MediaBuilder()
             .withCameraId("Tripod Far Field S")
             .withVideoSequenceName("Station M Pulse 65 - Tripod Far Field S")
-            .withVideoName("Tripod Pulse 65-S1 - Tripod Far Field S")
+            .withVideoName("Tripod Pulse 65-10-01 - Tripod Far Field S")
             .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_65-S1__Tripod_Far_Field_S"))
             .withVideoDescription("S6510-01-tripod imported from VARS_Images.")
             .build(),
@@ -385,114 +409,135 @@ object SpecialCasesTransform extends VideoArchiveTransform:
         "T0510-01-tripod"             -> MediaBuilder()
             .withCameraId("Tripod Far Field S")
             .withVideoSequenceName("Station M Pulse 51 - Tripod Far Field S")
-            .withVideoName("Tripod Pulse 51-S1 - Tripod Far Field S")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_51-S1__Tripod_Far_Field_S"))
+            .withVideoName("Tripod Pulse 51-0510-01 - Tripod Far Field S")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_51_0510_01__Tripod_Far_Field_S"))
             .withVideoDescription("T0510-01-tripod imported from VARS_Images.")
             .build(),
         "T0715-01-tripod"             -> MediaBuilder()
             .withCameraId("Tripod Far Field M")
             .withVideoSequenceName("Station M Pulse 71 - Tripod Far Field M")
-            .withVideoName("Tripod Pulse 71-S1 - Tripod Far Field M")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_71-S1__Tripod_Far_Field_M"))
+            .withVideoName("Tripod Pulse 71-0715-01 - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_71_0715_01__Tripod_Far_Field_M"))
             .withVideoDescription("T0715-01-tripod imported from VARS_Images.")
             .build(),
         "T17021-01-tripod"            -> MediaBuilder()
             .withCameraId("Tripod Far Field M")
             .withVideoSequenceName("Station M Pulse 17 - Tripod Far Field M")
-            .withVideoName("Tripod Pulse 17-S1 - Tripod Far Field M")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_17-S1__Tripod_Far_Field_M"))
+            .withVideoName("Tripod Pulse 17-17021-01 - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_17_17021_01__Tripod_Far_Field_M"))
             .withVideoDescription("T17021-01-tripod imported from VARS_Images.")
             .build(),
         "T2231-01-tripod"             -> MediaBuilder()
             .withCameraId("Tripod Far Field M")
             .withVideoSequenceName("Station M Pulse 22 - Tripod Far Field M")
-            .withVideoName("Tripod Pulse 22-S1 - Tripod Far Field M")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_22-S1__Tripod_Far_Field_M"))
+            .withVideoName("Tripod Pulse 22-2231-01 - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_22_2231_01__Tripod_Far_Field_M"))
             .withVideoDescription("T2231-01-tripod imported from VARS_Images.")
             .build(),
         "T22311-01-tripod"            -> MediaBuilder()
             .withCameraId("Tripod Far Field M")
             .withVideoSequenceName("Station M Pulse 22 - Tripod Far Field M")
-            .withVideoName("Tripod Pulse 22-S11 - Tripod Far Field M")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_22-S11__Tripod_Far_Field_M"))
+            .withVideoName("Tripod Pulse 22-22311-01 - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_22_22311_01__Tripod_Far_Field_M"))
             .withVideoDescription("T22311-01-tripod imported from VARS_Images.")
             .build(),
         "T26121-01-tripod"            -> MediaBuilder()
             .withCameraId("Tripod Far Field M")
             .withVideoSequenceName("Station M Pulse 26 - Tripod Far Field M")
-            .withVideoName("Tripod Pulse 26-S1 - Tripod Far Field M")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_26-S1__Tripod_Far_Field_M"))
+            .withVideoName("Tripod Pulse 26-26121-01 - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_26_26121_01__Tripod_Far_Field_M"))
             .withVideoDescription("T26121-01-tripod imported from VARS_Images.")
             .build(),
         "T7021-01-tripod"             -> MediaBuilder()
             .withCameraId("Tripod Far Field M")
             .withVideoSequenceName("Station M Pulse 70 - Tripod Far Field M")
-            .withVideoName("Tripod Pulse 70-S1 - Tripod Far Field M")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70-S1__Tripod_Far_Field_M"))
+            .withVideoName("Tripod Pulse 70-7021-01 - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70_7021_01__Tripod_Far_Field_M"))
             .withVideoDescription("T7021-01-tripod imported from VARS_Images.")
             .build(),
         "T70211-01-tripod"            -> MediaBuilder()
             .withCameraId("Tripod Far Field M")
             .withVideoSequenceName("Station M Pulse 70 - Tripod Far Field M")
-            .withVideoName("Tripod Pulse 70-S11 - Tripod Far Field M")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70-S11__Tripod_Far_Field_M"))
+            .withVideoName("Tripod Pulse 70-70211-01 - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70_70211_01__Tripod_Far_Field_M"))
             .withVideoDescription("T70211-01-tripod imported from VARS_Images.")
             .build(),
         "T70212011-01-tripod"         -> MediaBuilder()
             .withCameraId("Tripod Far Field M")
             .withVideoSequenceName("Station M Pulse 70 - Tripod Far Field M")
-            .withVideoName("Tripod Pulse 70-S1201 - Tripod Far Field M")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70-S1201__Tripod_Far_Field_M"))
+            .withVideoName("Tripod Pulse 70-70212011-01 - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70_70212011_01__Tripod_Far_Field_M"))
             .withVideoDescription("T70212011-01-tripod imported from VARS_Images.")
             .build(),
         "T7022-01-tripod"             -> MediaBuilder()
             .withCameraId("Tripod Far Field M")
             .withVideoSequenceName("Station M Pulse 70 - Tripod Far Field M")
-            .withVideoName("Tripod Pulse 70-S2 - Tripod Far Field M")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70-S2__Tripod_Far_Field_M"))
+            .withVideoName("Tripod Pulse 70-7022-01 - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70_7022_01__Tripod_Far_Field_M"))
             .withVideoDescription("T7022-01-tripod imported from VARS_Images.")
             .build(),
         "T70221-01-tripod"            -> MediaBuilder()
             .withCameraId("Tripod Far Field M")
             .withVideoSequenceName("Station M Pulse 70 - Tripod Far Field M")
-            .withVideoName("Tripod Pulse 70-S21 - Tripod Far Field M")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70-S21__Tripod_Far_Field_M"))
+            .withVideoName("Tripod Pulse 70-70221-01 - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70_70221_01__Tripod_Far_Field_M"))
             .withVideoDescription("T70221-01-tripod imported from VARS_Images.")
             .build(),
         "T7023-01-tripod"             -> MediaBuilder()
             .withCameraId("Tripod Far Field M")
             .withVideoSequenceName("Station M Pulse 70 - Tripod Far Field M")
-            .withVideoName("Tripod Pulse 70-S3 - Tripod Far Field M")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70-S3__Tripod_Far_Field_M"))
+            .withVideoName("Tripod Pulse 70-7023-01 - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70_7023_01__Tripod_Far_Field_M"))
             .withVideoDescription("T7023-01-tripod imported from VARS_Images.")
             .build(),
         "T70231-01-tripod"            -> MediaBuilder()
             .withCameraId("Tripod Far Field M")
             .withVideoSequenceName("Station M Pulse 70 - Tripod Far Field M")
-            .withVideoName("Tripod Pulse 70-S31 - Tripod Far Field M")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70-S31__Tripod_Far_Field_M"))
+            .withVideoName("Tripod Pulse 70-70231-01 - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70_70231_01__Tripod_Far_Field_M"))
             .withVideoDescription("T70231-01-tripod imported from VARS_Images.")
             .build(),
         "T7024-01-tripod"             -> MediaBuilder()
             .withCameraId("Tripod Far Field M")
             .withVideoSequenceName("Station M Pulse 70 - Tripod Far Field M")
-            .withVideoName("Tripod Pulse 70-S4 - Tripod Far Field M")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70-S4__Tripod_Far_Field_M"))
+            .withVideoName("Tripod Pulse 70-7024-01 - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70_7024_01__Tripod_Far_Field_M"))
             .withVideoDescription("T7024-01-tripod imported from VARS_Images.")
             .build(),
         "T70241-01-tripod"            -> MediaBuilder()
             .withCameraId("Tripod Far Field M")
             .withVideoSequenceName("Station M Pulse 70 - Tripod Far Field M")
-            .withVideoName("Tripod Pulse 70-S41 - Tripod Far Field M")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70-S41__Tripod_Far_Field_M"))
+            .withVideoName("Tripod Pulse 70-7024-01 - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_70_7024_01__Tripod_Far_Field_M"))
             .withVideoDescription("T70241-01-tripod imported from VARS_Images.")
             .build(),
         "T7107-01-tripod"             -> MediaBuilder()
             .withCameraId("Tripod Far Field Solo")
             .withVideoSequenceName("Station M Pulse 71 - Tripod Far Field S")
-            .withVideoName("Tripod Pulse 71-S1 - Tripod Far Field S")
-            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_71-S1__Tripod_Far_Field_S"))
+            .withVideoName("Tripod Pulse 71-7107-01 - Tripod Far Field S")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_71_7107_01__Tripod_Far_Field_S"))
             .withVideoDescription("T7107-01-tripod imported from VARS_Images.")
+            .build(),
+        "Tripod Pulse 52-1-FILM"      -> MediaBuilder()
+            .withCameraId("Tripod Far Field M")
+            .withVideoSequenceName("Station M Pulse 52 - Tripod Far Field M")
+            .withVideoName("Tripod Pulse 52-1-FILM - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_52_1_FILM__Tripod_Far_Field_M"))
+            .withVideoDescription("Tripod Pulse 52-1-FILM imported from VARS_Images.")
+            .build(),
+        "Tripod Pulse 52-2-FILM"     -> MediaBuilder()
+            .withCameraId("Tripod Far Field M")
+            .withVideoSequenceName("Station M Pulse 52 - Tripod Far Field M")
+            .withVideoName("Tripod Pulse 52-2-FILM - Tripod Far Field M")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_52_2_FILM__Tripod_Far_Field_M"))
+            .withVideoDescription("Tripod Pulse 52-2-FILM imported from VARS_Images.")
+            .build(),
+        "Tripod Pulse 52-FILM-1"     -> MediaBuilder()
+            .withCameraId("Tripod Near Field")
+            .withVideoSequenceName("Station M Pulse 52 - Tripod Near Field")
+            .withVideoName("Tripod Pulse 52-1A-FILM - Tripod Near Field")
+            .withUri(URI.create("urn:imagecollection:org.mbari:Tripod_Pulse_52_1A_FILM__Tripod_Near_Field"))
+            .withVideoDescription("Tripod Pulse 52-FILM-1 imported from VARS_Images.")
             .build()
     )
 
@@ -502,4 +547,8 @@ object SpecialCasesTransform extends VideoArchiveTransform:
         specialCases.contains(videoArchive.getName)
 
     override def transform(videoArchive: VideoArchive): Option[Media] =
-        specialCases.get(videoArchive.getName)
+        specialCases.get(videoArchive.getName).map(m => {
+            // Set start timestamp if available
+            findStartTimestamp(videoArchive).foreach(m.setStartTimestamp)
+            m
+        })

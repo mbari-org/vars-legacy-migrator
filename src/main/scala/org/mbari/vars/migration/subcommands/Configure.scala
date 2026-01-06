@@ -64,23 +64,32 @@ object Configure:
         val settingsDirectory = Settings.getSettingsDirectory
         val aes               = Settings.getAes
         val file              = settingsDirectory.resolve(SETTINGS_FILE_NAME)
+        loadRaw() match
+            case None                       => None
+            case Some((jdbcUrl, user, pwd)) =>
+                Try {
+                    ToolBeltFactory.newToolBelt(jdbcUrl, user, pwd)
+                } match
+                    case Failure(exception) =>
+                        log.atWarn.withCause(exception).log("Failed to load jdbc params to the legacy database")
+                        None
+                    case Success(value)     =>
+                        if test(jdbcUrl, user, pwd) then
+                            log.atDebug.log("Loaded jdbc params to the legacy database from $file")
+                            Some(value)
+                        else
+                            log.atWarn.log(s"Failed to connect to database at $jdbcUrl using params loaded from $file")
+                            None
+
+    def loadRaw(): Option[(String, String, String)] =
+        val settingsDirectory = Settings.getSettingsDirectory
+        val aes               = Settings.getAes
+        val file              = settingsDirectory.resolve(SETTINGS_FILE_NAME)
         if Files.exists(file) then
             val text    = Files.readString(file, StandardCharsets.UTF_8)
             val parts   = text.split("\n")
             val jdbcUrl = parts(0)
             val user    = aes.decrypt(parts(1))
             val pwd     = aes.decrypt(parts(2))
-            Try {
-                ToolBeltFactory.newToolBelt(jdbcUrl, user, pwd)
-            } match
-                case Failure(exception) =>
-                    log.atWarn.withCause(exception).log("Failed to load jdbc params to the legacy database")
-                    None
-                case Success(value)     =>
-                    if test(jdbcUrl, user, pwd) then
-                        log.atDebug.log("Loaded jdbc params to the legacy database from $file")
-                        Some(value)
-                    else
-                        log.atWarn.log(s"Failed to connect to database at $jdbcUrl using params loaded from $file")
-                        None
+            Some((jdbcUrl, user, pwd))
         else None
