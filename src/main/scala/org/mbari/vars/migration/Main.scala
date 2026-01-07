@@ -93,24 +93,28 @@ object Main:
         doc = "Migrate a single video archive"
     )
     def migrateOne(
-        @arg(positional = true, doc = "The videoArchiveName to migrate") videoArchiveName: String
+        @arg(positional = true, doc = "The videoArchiveName to migrate") videoArchiveName: String,
+        @arg(short = 'g', doc = "Default group for annotations") group: String
     ): Unit =
         given AnnotationService = serviceBuilder.annotationService
         given MediaService      = serviceBuilder.mediaService
         given MediaFactory      = mediaFactory
         given ToolBelt          = toolBeltOption.get
-        MigrateOne.run(videoArchiveName)
+        MigrateOne.run(videoArchiveName, group)
 
     @mainargs.main(
         name = "migrate-all",
         doc = "Migrate a single video archive"
     )
-    def migrateAll(): Unit =
+    def migrateAll(
+        @arg(positional = true, doc = "Default group for annotations") group: String,
+        @arg(short = 'l', doc = "Limit the number of video archives to migrate") limit: Int = -1,
+    ): Unit =
         given AnnotationService = serviceBuilder.annotationService
         given MediaService      = serviceBuilder.mediaService
         given MediaFactory      = mediaFactory
         given ToolBelt          = toolBeltOption.get
-        MigrateAll.run()
+        MigrateAll.run(group, limit)
 
     @mainargs.main(
         name = "main-runner",

@@ -17,6 +17,7 @@ import vars.annotation.VideoArchive
 
 import scala.jdk.CollectionConverters.*
 
+
 class MigrateService(using
     annotationService: AnnotationService,
     mediaService: MediaService,
@@ -27,14 +28,24 @@ class MigrateService(using
     private val log                 = System.getLogger(getClass.getName)
     private val vampireSquidService = VampireSquidService()
 
-    def migrate(videoArchive: VideoArchive, missionContact: String): Unit =
-        log.atInfo.log(s"---- Starting migration of ${videoArchive.getName} with missionContact $missionContact")
+    /**
+     * Migrate a VideoArchive from VarsLegacy to VarsVampireSquid
+     *
+     * @param videoArchive The VideoArchive to migrate
+     * @param group The mission contact name
+     * @return True if migration was successful, false otherwise
+     */
+    def migrate(videoArchive: VideoArchive, group: String): Boolean =
+        log.atInfo.log(s"---- Starting migration of ${videoArchive.getName} with group '$group'")
+        var success = false
         if canMigrate(videoArchive) then
             findOrCreateMedia(videoArchive) match
                 case Right(media) =>
-                    migrateAnnotations(videoArchive, media, missionContact) // TODO - Implement this
+                    migrateAnnotations(videoArchive, media, group)
+                    success = true
                 case Left(ex)     =>
-                    log.atWarn.withCause(ex).log(s"Not able to transform ${videoArchive.getName} to a media object")
+                    log.atWarn.withCause(ex).log(s"Cannot migrate ${videoArchive.getName}")
+        success
 
     def canMigrate(videoArchive: VideoArchive): Boolean =
         val n = videoArchive.getVideoFrames.size()
@@ -93,15 +104,8 @@ class MigrateService(using
         // Create annotations
         val videoFrames = videoArchive.getVideoFrames.asScala
         val annotations = videoFrames.flatMap(vf => AnnotationFactory.toAnnotations(media, vf, group))
-        val gson        = AnnosaurusHttpClient.newGson()
         log.atInfo.log(s"Creating ${annotations.size} annotations for ${videoArchive.getName}")
 
-        // TODO - Create annotations
-        // annotations
-        //     .grouped(50)
-        //     .foreach(annos =>
-        //         val json = gson.toJson(annos.asJava)
-        //         log.atInfo.log(s"SENDING:\n$json")
-        //     )
-        annotations.grouped(50)
+        annotations
+            .grouped(50)
             .foreach(annos => annotationService.createAnnotations(annos.asJava).join())

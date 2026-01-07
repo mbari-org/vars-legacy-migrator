@@ -21,27 +21,37 @@ object MigrateOne:
 
     private val log = System.getLogger(getClass.getName)
 
-    def run(videoArchiveName: String)(using
+    def run(videoArchiveName: String, group: String)(using
         annotationService: AnnotationService,
         mediaService: MediaService,
         mediaFactory: MediaFactory,
         toolBelt: ToolBelt
-    ): Unit =
+    ): Boolean =
         val migrateService    = MigrateService()
         val varsLegacyService = VarsLegacyService()
         val opt               = varsLegacyService.findVideoArchiveSetByVideoArchiveName(videoArchiveName)
         opt match
-            case None                  => log.atWarn.log(s"No VideoArchiveSet found for $videoArchiveName")
+            case None                  => 
+                log.atWarn.log(s"No VideoArchiveSet found for $videoArchiveName")
+                false
             case Some(videoArchiveSet) =>
-                val missionContact = videoArchiveSet.getCameraDeployments.asScala.head.getChiefScientistName
-                for videoArchive <- videoArchiveSet.getVideoArchives.asScala
-                do
-                    try
-                        val frames = videoArchive.getVideoFrames().asScala
-                        if frames.isEmpty then log.atWarn.log(s"No video frames found for $videoArchiveName")
-                        else
-                            // do something
-                            migrateService.migrate(videoArchive, missionContact)
-                    catch
-                        case NonFatal(e) =>
-                            log.atError.withCause(e).log(s"Failed to migrate $videoArchiveName")
+                val opt = videoArchiveSet.getVideoArchives().asScala.find(va => va.getName == videoArchiveName)
+                opt match
+                    case None  =>
+                        log.atWarn.log(s"VideoArchive '$videoArchiveName' not found in VideoArchiveSet '${videoArchiveSet}'")
+                        false
+                    case Some(videoArchive) =>
+                        var success = false
+                        try
+                            val frames = videoArchive.getVideoFrames().asScala
+                            if frames.isEmpty then 
+                                log.atWarn.log(s"No video frames found for $videoArchiveName")
+                            else
+                                // do something
+                                success = migrateService.migrate(videoArchive, group) 
+                        catch
+                            case NonFatal(e) =>
+                                log.atError.withCause(e).log(s"Failed to migrate $videoArchiveName")
+                        success 
+                
+
