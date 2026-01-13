@@ -106,31 +106,27 @@ object AnnotationFactory:
             val parts = assocation.getLinkValue.split(" ")
             val p0 = (math.round(parts(0).toDouble), math.round(parts(1).toDouble))
             val p1 = (math.round(parts(2).toDouble), math.round(parts(3).toDouble))
+            val comment = if parts.length > 4 then parts.drop(4).mkString(" ") else Association.VALUE_SELF
             val xsStr = s"[${p0._1}, ${p1._1}]"
             val ysStr = s"[${p0._2}, ${p1._2}]"
             val s = s"""{"x": $xsStr, "y": $ysStr}"""
-            Association(targetLinkName, Association.VALUE_SELF, s, "application/json", null)
+            Association(targetLinkName, comment, s, "application/json", null)
         else assocation
 
     private def remapPolygon(assocation: Association): Association = 
         val sourceLinkName = "area measurement coordinates [x0 y0 ... xn yn; comment]"
         val targetLinkName = "localization-polygon" // linkValue is {x:[], y:[]}
         if assocation.getLinkName == sourceLinkName then
-            val s = assocation
-                .getLinkValue
-                .split(";")
-                .head
-                .trim
-                .split(" ")
-                .grouped(2)
-                .map { case Array(x, y) => (math.round(x.toDouble), math.round(y.toDouble)) }
-                .toSeq
-                .unzip match
-                case (xs, ys) =>
-                    val xsStr = xs.mkString("[", ",", "]")
-                    val ysStr = ys.mkString("[", ",", "]")
-                    s"""{"x": $xsStr, "y": $ysStr}"""
-            Association(targetLinkName, Association.VALUE_SELF, s, "application/json", null)
+            val parts = assocation.getLinkValue.split(";")
+            val comment = if parts.length > 1 then parts.drop(1).mkString(" ").trim else Association.VALUE_SELF
+            val coords = parts.head.trim.split(" ")
+            val xyPairs = coords.grouped(2).map { case Array(x, y) => (math.round(x.toDouble), math.round(y.toDouble)) }.toSeq
+            val (xs, ys) = xyPairs.unzip
+            val xsStr = xs.mkString("[", ",", "]")
+            val ysStr = ys.mkString("[", ",", "]")
+            val s = s"""{"x": $xsStr, "y": $ysStr}"""
+            Association(targetLinkName, comment, s, "application/json", null)
         else assocation
+
 
 

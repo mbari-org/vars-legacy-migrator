@@ -11,7 +11,7 @@ Compile / doc / scalacOptions ++= Seq(
     "./src/docs/index.md"
 )
 
-ThisBuild / scalaVersion     := "3.7.3"
+ThisBuild / scalaVersion     := "3.7.4"
 ThisBuild / organization     := "org.mbari"
 ThisBuild / organizationName := "MBARI"
 ThisBuild / startYear        := Some(2025)
