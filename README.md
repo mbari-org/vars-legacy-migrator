@@ -8,7 +8,7 @@
 
 ## Overview
 
-vars-legacy-migrator is a Scala 3 CLI tool for migrating legacy VARS (Video Annotation and Reference System) annotation data from a legacy SQL Server database to modern microservices. This is proprietary internal software for MBARI (Monterey Bay Aquarium Research Institute).
+vars-legacy-migrator is a Scala 3 CLI tool for migrating [legacy VARS (Video Annotation and Reference System)](https://github.com/hohonuuli/vars) annotation data from a legacy SQL Server database to modern microservices. This is proprietary internal software for MBARI (Monterey Bay Aquarium Research Institute).
 
 ### Data Flow
 
